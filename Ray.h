@@ -17,6 +17,7 @@ private:
     sc::float3 luminance;
 public:
     Ray(const sc::float3& o, const sc::float3& d):origin(o), direction(d),luminance({1,1,1}){}
+    Ray(const sc::float3& o, const sc::float3& d, sc::float3 color):origin(o), direction(d),luminance(color){}
     Ray():origin({0,0,0}), direction({0,0,0}){}
     const sycl::float3 &getOrigin() const {return origin;}
     void setOrigin(const sycl::float3 &origin) {Ray::origin = origin;}

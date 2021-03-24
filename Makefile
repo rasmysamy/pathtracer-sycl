@@ -183,6 +183,114 @@ Camera.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Camera.cpp.s
 .PHONY : Camera.cpp.s
 
+Diffuse.o: Diffuse.cpp.o
+
+.PHONY : Diffuse.o
+
+# target to build an object file
+Diffuse.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Diffuse.cpp.o
+.PHONY : Diffuse.cpp.o
+
+Diffuse.i: Diffuse.cpp.i
+
+.PHONY : Diffuse.i
+
+# target to preprocess a source file
+Diffuse.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Diffuse.cpp.i
+.PHONY : Diffuse.cpp.i
+
+Diffuse.s: Diffuse.cpp.s
+
+.PHONY : Diffuse.s
+
+# target to generate assembly for a file
+Diffuse.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Diffuse.cpp.s
+.PHONY : Diffuse.cpp.s
+
+Emissive.o: Emissive.cpp.o
+
+.PHONY : Emissive.o
+
+# target to build an object file
+Emissive.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Emissive.cpp.o
+.PHONY : Emissive.cpp.o
+
+Emissive.i: Emissive.cpp.i
+
+.PHONY : Emissive.i
+
+# target to preprocess a source file
+Emissive.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Emissive.cpp.i
+.PHONY : Emissive.cpp.i
+
+Emissive.s: Emissive.cpp.s
+
+.PHONY : Emissive.s
+
+# target to generate assembly for a file
+Emissive.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Emissive.cpp.s
+.PHONY : Emissive.cpp.s
+
+Material.o: Material.cpp.o
+
+.PHONY : Material.o
+
+# target to build an object file
+Material.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Material.cpp.o
+.PHONY : Material.cpp.o
+
+Material.i: Material.cpp.i
+
+.PHONY : Material.i
+
+# target to preprocess a source file
+Material.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Material.cpp.i
+.PHONY : Material.cpp.i
+
+Material.s: Material.cpp.s
+
+.PHONY : Material.s
+
+# target to generate assembly for a file
+Material.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Material.cpp.s
+.PHONY : Material.cpp.s
+
+Random.o: Random.cpp.o
+
+.PHONY : Random.o
+
+# target to build an object file
+Random.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Random.cpp.o
+.PHONY : Random.cpp.o
+
+Random.i: Random.cpp.i
+
+.PHONY : Random.i
+
+# target to preprocess a source file
+Random.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Random.cpp.i
+.PHONY : Random.cpp.i
+
+Random.s: Random.cpp.s
+
+.PHONY : Random.s
+
+# target to generate assembly for a file
+Random.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Random.cpp.s
+.PHONY : Random.cpp.s
+
 Ray.o: Ray.cpp.o
 
 .PHONY : Ray.o
@@ -236,6 +344,33 @@ Sphere.s: Sphere.cpp.s
 Sphere.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Sphere.cpp.s
 .PHONY : Sphere.cpp.s
+
+Triangle.o: Triangle.cpp.o
+
+.PHONY : Triangle.o
+
+# target to build an object file
+Triangle.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Triangle.cpp.o
+.PHONY : Triangle.cpp.o
+
+Triangle.i: Triangle.cpp.i
+
+.PHONY : Triangle.i
+
+# target to preprocess a source file
+Triangle.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Triangle.cpp.i
+.PHONY : Triangle.cpp.i
+
+Triangle.s: Triangle.cpp.s
+
+.PHONY : Triangle.s
+
+# target to generate assembly for a file
+Triangle.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/pathtracer-sycl.dir/build.make CMakeFiles/pathtracer-sycl.dir/Triangle.cpp.s
+.PHONY : Triangle.cpp.s
 
 main.o: main.cpp.o
 
@@ -304,12 +439,27 @@ help:
 	@echo "... Camera.o"
 	@echo "... Camera.i"
 	@echo "... Camera.s"
+	@echo "... Diffuse.o"
+	@echo "... Diffuse.i"
+	@echo "... Diffuse.s"
+	@echo "... Emissive.o"
+	@echo "... Emissive.i"
+	@echo "... Emissive.s"
+	@echo "... Material.o"
+	@echo "... Material.i"
+	@echo "... Material.s"
+	@echo "... Random.o"
+	@echo "... Random.i"
+	@echo "... Random.s"
 	@echo "... Ray.o"
 	@echo "... Ray.i"
 	@echo "... Ray.s"
 	@echo "... Sphere.o"
 	@echo "... Sphere.i"
 	@echo "... Sphere.s"
+	@echo "... Triangle.o"
+	@echo "... Triangle.i"
+	@echo "... Triangle.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.17)
-project(pathtracer-sycl)
+project(pathtracer-sycl CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -17,11 +17,14 @@ set(CMAKE_AUTOUIC ON)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 #find_package(ComputeCpp REQUIRED)
 
-include(SYCL)
+
 #include(OpenCL)
 
 set(DPCPP_ROOT /opt/dpc++)
+option(DPCPP_ROOT /opt/dpc++)
 set(SYCLROOT /opt/dpc++)
+
+include(SYCL)
 
 find_package(SYCL REQUIRED)
 
@@ -29,7 +32,7 @@ set(QT_VERSION 5)
 set(REQUIRED_LIBS Core Gui Widgets)
 set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
 
-add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h)
+add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h)
 #add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h)
 
 MESSAGE(${REQUIRED_LIBS_QUALIFIED})
@@ -44,3 +47,4 @@ target_link_libraries(${PROJECT_NAME} ${REQUIRED_LIBS_QUALIFIED})
 target_compile_options(${PROJECT_NAME} PRIVATE -fsycl-targets=nvptx64-nvidia-cuda-sycldevice)
 target_link_options(${PROJECT_NAME} PRIVATE -fsycl-targets=nvptx64-nvidia-cuda-sycldevice)
 #target_compile_options(${PROJECT_NAME} PRIVATE -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice,spir64-unknown-unknown-sycldevice)
+#target_link_options(${PROJECT_NAME} PRIVATE -fsycl -fsycl-targets=nvptx64-nvidia-cuda-sycldevice,spir64-unknown-unknown-sycldevice)
