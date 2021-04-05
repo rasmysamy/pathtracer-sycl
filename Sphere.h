@@ -21,22 +21,75 @@ private:
 public:
     Sphere(const sc::float3& c, float r):center(c), radius(r), attr_1({0.9,0.9,0.9}), Material(MATERIALS::Diffuse){}
     Sphere(const sc::float3& c, float r, sc::float3 color, int material):center(c), radius(r), attr_1(color), Material(material){}
-    std::tuple<Ray, bool> rayIntersect(const Ray& r) const{
-        sc::float3 closestPoint = r.closestPointOnRay(center);
-
-        float squareDistanceFromCenter = sc::fast_length(center-closestPoint);
-        squareDistanceFromCenter *= squareDistanceFromCenter;
-        float radiusSquared = radius*radius;
-        float remainderSquared = radiusSquared-squareDistanceFromCenter;
-        sc::float3 direction = r.getDirection();
-        sc::float3 beforePoint = closestPoint - (direction*sc::sqrt(remainderSquared));
-        sc::float3 afterPoint = closestPoint + (direction*sc::sqrt(remainderSquared));
-
-
-        return r.beforeStart(afterPoint) || squareDistanceFromCenter>radiusSquared ? std::tuple(Ray(), false) :
-               (!r.beforeStart(beforePoint) ? std::tuple(Ray(beforePoint, sc::normalize(beforePoint-center)), true) :
-               std::tuple(Ray(afterPoint, sc::normalize(afterPoint-center)), true));
-    }
+//    std::tuple<Ray, bool> rayIntersect(const Ray& r) const{
+//        sc::float3 closestPoint = r.closestPointOnRay(center);
+//
+//        float squareDistanceFromCenter = sc::fast_length(center-closestPoint);
+//        squareDistanceFromCenter *= squareDistanceFromCenter;
+//        float radiusSquared = radius*radius;
+//        float remainderSquared = radiusSquared-squareDistanceFromCenter;
+//        sc::float3 direction = r.getDirection();
+//        sc::float3 beforePoint = closestPoint - (direction*sc::sqrt(remainderSquared));
+//        sc::float3 afterPoint = closestPoint + (direction*sc::sqrt(remainderSquared));
+//
+//
+//
+//
+//        return r.beforeStart(afterPoint) || squareDistanceFromCenter>radiusSquared ? std::tuple(r, false) :
+//               (!r.beforeStart(beforePoint) ? std::tuple(Ray(beforePoint, sc::normalize(beforePoint-center)), true) :
+//               std::tuple(Ray(afterPoint, sc::normalize(afterPoint-center)), true));
+//    }
+//
+//    void pRayIntersect(const Ray& r, Ray *retRay, bool *isHit) const{
+//        sc::float3 closestPoint = r.closestPointOnRay(center);
+//
+//        float squareDistanceFromCenter = sc::fast_length(center-closestPoint);
+//        squareDistanceFromCenter *= squareDistanceFromCenter;
+//        float radiusSquared = radius*radius;
+//        float remainderSquared = radiusSquared-squareDistanceFromCenter;
+//        *isHit = (remainderSquared > 0);
+//        if(!*isHit)
+//            return;
+//        sc::float3 direction = r.getDirection();
+//        sc::float3 afterPoint = closestPoint + (direction*sc::sqrt(remainderSquared));
+//        *isHit = !r.beforeStart(afterPoint);
+//        if(!*isHit)
+//            return;
+//        sc::float3 beforePoint = closestPoint - (direction*sc::sqrt(remainderSquared));
+//
+//        if(!r.beforeStart(beforePoint)) {
+//            retRay->setOrigin(afterPoint);
+//            retRay->setDirection(afterPoint-center);
+//        }
+//        else{
+//            retRay->setOrigin(beforePoint);
+//            retRay->setDirection(beforePoint-center);
+//        }
+//    }
+//
+//    material::intersectReturn srayIntersect(const Ray& r) const{
+//        sc::float3 closestPoint = r.closestPointOnRay(center);
+//
+//        float squareDistanceFromCenter = sc::fast_length(center-closestPoint);
+//        squareDistanceFromCenter *= squareDistanceFromCenter;
+//        float radiusSquared = radius*radius;
+//        float remainderSquared = radiusSquared-squareDistanceFromCenter;
+//        sc::float3 direction = r.getDirection();
+//        sc::float3 beforePoint = closestPoint - (direction*sc::sqrt(remainderSquared));
+//        sc::float3 afterPoint = closestPoint + (direction*sc::sqrt(remainderSquared));
+//
+//        material::intersectReturn ret{};
+//
+//        ret.hitpoint = r.beforeStart(beforePoint) ? afterPoint : beforePoint;
+//        ret.normal = sc::normalize(ret.hitpoint-center);
+//        ret.intersect = !(r.beforeStart(afterPoint) || squareDistanceFromCenter>radiusSquared);
+////        ret.material = Material;
+//        ret.material = 0;
+//        ret.attr_1 = attr_1;
+//        ret.objType = 0;
+//
+//        return ret;
+//    }
     float fRayIntersect(const Ray& r) const{
         sc::float3 originCenter = r.getOrigin()-center;
         float A = sc::dot(r.getDirection(), r.getDirection());
@@ -53,21 +106,21 @@ public:
     }
     sc::float3 getPixelEmissive(const Ray& incident) const {return material::getPixelColor(incident, attr_1);}
 
-    const sycl::float3 &getCenter() const {
+    const sc::float3 &getCenter() const {
         return center;
     }
-
-    void setCenter(const sycl::float3 &center) {
-        Sphere::center = center;
-    }
-
-    float getRadius() const {
-        return radius;
-    }
-
-    void setRadius(float radius) {
-        Sphere::radius = radius;
-    }
+//
+//    void setCenter(const sc::float3 &center) {
+//        Sphere::center = center;
+//    }
+//
+//    float getRadius() const {
+//        return radius;
+//    }
+//
+//    void setRadius(float radius) {
+//        Sphere::radius = radius;
+//    }
 };
 
 
