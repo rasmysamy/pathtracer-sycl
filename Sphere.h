@@ -100,6 +100,21 @@ public:
         float numerator = -B-deltaSqrt;
         return delta > 0 ? (numerator > 0 ? numerator/(2*A) : (numerator+2*deltaSqrt)/(2*A)) : -1;
     }
+    material::intersectReturn mRayIntersect(const Ray& r, int stackPos) const{
+        float dist = fRayIntersect(r);
+        material::intersectReturn ret;
+        if(dist<0)
+            return ret;
+        ret.intersectDistance=dist;
+        ret.intersect=true;
+        ret.objType=0;
+        ret.hitpoint=r.getOrigin()+dist*r.getDirection();
+        ret.normal=sc::normalize(ret.hitpoint-center);
+        ret.material=Material;
+        ret.attr_1=attr_1;
+        ret.stackPos = stackPos;
+        return ret;
+    }
     bool isEmissive() const {return Material==MATERIALS::Emissive;}
     Ray reflect(const Ray& incident, const Ray& normal, sc::float3 rand) const {
         return material::reflectMat(incident, normal, attr_1, Material, rand);

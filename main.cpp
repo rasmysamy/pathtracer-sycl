@@ -10,74 +10,32 @@
 #include "Sphere.h"
 #include "Random.h"
 #include "Triangle.h"
+#include "AABB.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tiny_obj_loader.h"
+#include "Mesh.h"
+#include "kdTreeMesh.h"
 
 class tracer;
 
-const int width=100;
-const int height=60;
+const int width=1920;
+const int height=1080;
+const int samples = 1000;
+const int reflections = 6;
 using material::MATERIALS;
 
 int main(int argc, char *argv[]) {
-    std::string inputfile = "teapot-low.obj";
-    tinyobj::ObjReaderConfig reader_config;
-
-    tinyobj::ObjReader reader;
-
-    if (!reader.ParseFromFile(inputfile, reader_config)) {
-        if (!reader.Error().empty()) {
-            std::cerr << "TinyObjReader: " << reader.Error();
-        }
-        exit(1);
-    }
-
-    if (!reader.Warning().empty()) {
-        std::cout << "TinyObjReader: " << reader.Warning();
-    }
-
-    auto& attrib = reader.GetAttrib();
-    auto& shapes = reader.GetShapes();
 
 
-    std::vector<Triangle> tObjects = std::vector<Triangle>();
+    std::string inputfile = "dragon-low.obj";
+//    std::string inputfile = "teapot-low.obj";
 
-// Loop over shapes
-    for (const auto & shape : shapes) {
-        // Loop over faces(polygon)
-        size_t index_offset = 0;
-        for (size_t f = 0; f < shape.mesh.num_face_vertices.size(); f++) {
-            auto fv = size_t(shape.mesh.num_face_vertices[f]);
-
-            size_t v = 0;
-            tinyobj::index_t idx = shape.mesh.indices[index_offset + v];
-            tinyobj::real_t vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
-            tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
-            tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
-            sc::float3 A = {vx, vz, -vy};
-            v++;
-            idx = shape.mesh.indices[index_offset + v];
-            vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
-            vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
-            vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
-            sc::float3 B = {vx, vz, -vy};
-            v++;
-            idx = shape.mesh.indices[index_offset + v];
-            vx = attrib.vertices[3*size_t(idx.vertex_index)+0];
-            vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
-            vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
-            sc::float3 C = {vx, vz, -vy};
-            v++;
-
-            tObjects.push_back(Triangle(A,B,C, {1.5,1.5,1.5}, MATERIALS::Diffuse));
-
-            index_offset += fv;
-
-            // per-face material
-            shape.mesh.material_ids[f];
-        }
-    }
+    std::vector<Triangle> tStack = std::vector<Triangle>();
+    MeshStage s1 = MeshStage(inputfile, &tStack, MATERIALS::Emissive, {200,200,200});
+    std::vector<MeshStage> mObjects = std::vector<MeshStage>();
+    mObjects.push_back(MeshStage(inputfile, &tStack, MATERIALS::Diffuse, {0.8,0.8,0.8}));
+//    mObjects.push_back(MeshStage(inputfile, &tStack, MATERIALS::Emissive, {200,200,200}));
+    inputfile = "plane.obj";
+    mObjects.push_back(MeshStage(inputfile, &tStack, MATERIALS::Diffuse, {0.8,0.8,0.8}));
 
     Camera camera = Camera({0,-10,-1.5}, {0,1,0}, 90, 0, width, height);
 //    Camera camera = Camera({0,-10,}, {0,1,0}, 90, 0, width, height);
@@ -92,7 +50,16 @@ int main(int argc, char *argv[]) {
         std::rethrow_exception(e);
     }});
 
+    std::vector<kdTreeMesh> kVec = std::vector<kdTreeMesh>();
 
+    std::vector<Triangle> tTemp = std::vector<Triangle>();
+    MeshStage temp1 = MeshStage("dragon-low.obj", &tTemp, MATERIALS::Diffuse, {.7,.7,.7});
+    materialBase mat = materialBase({.7, .4, .1}, .8, MATERIALS::Glossy);
+    kVec.emplace_back(kdTreeMesh(tTemp, temp1.boundingVolume, 15, 20, queue, mat));
+    tTemp = std::vector<Triangle>();
+    temp1 = MeshStage("plane.obj", &tTemp, MATERIALS::Diffuse, {.7,.7,.7});
+    mat = materialBase({.8, .8, .8}, .0, MATERIALS::Diffuse);
+    kVec.emplace_back(kdTreeMesh(tTemp, temp1.boundingVolume, 18, 250, queue, mat));
 
     std::cout << "Device: " << device.get_info<sc::info::device::name>() << std::endl;
 
@@ -102,6 +69,7 @@ int main(int argc, char *argv[]) {
             rays[x+y*width] = camera.getRay(x+1, y+1);
         }
     }
+
     std::random_device rd;
     std::mt19937 eng(rd());
 
@@ -113,10 +81,8 @@ int main(int argc, char *argv[]) {
             seeds[x+y*width] = dist(eng);
         }
     }
-
-    auto floatImage = new sc::float3[width*height]();
+    auto floatImage = new sc::float3[width*height];
     std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-
     std::vector<Sphere> objects = std::vector<Sphere>();
     //objects.push_back(Sphere({0,3,-0.5}, .4, {.7,.7,.7}, MATERIALS::Diffuse));
     objects.push_back(Sphere({0,0, -4}, 2, sc::float3({255,255,255})*3, MATERIALS::Emissive));
@@ -130,172 +96,116 @@ int main(int argc, char *argv[]) {
 //    D = {-400, 400, 3};
     //tObjects.push_back(Triangle(A, B, C, {.7,.7,.70}, MATERIALS::Diffuse));
     //tObjects.push_back(Triangle({0,3,-1}, {0.8,3.1,-0.6}, {0,3,2}, {.7,.7,.70}, MATERIALS::Diffuse));
-    tObjects.push_back(Triangle({0,3,-1}, {0.8,3.1,-0.6}, {0,3,-2}, {1500,700,2700}, MATERIALS::Emissive));
+    //tObjects.push_back(Triangle({0,3,-1}, {0.8,3.1,-0.6}, {0,3,-2}, {1500,700,2700}, MATERIALS::Emissive));
+
+
 
     sc::buffer<Ray, 1> rBuf(rays, sc::range<1>(width* height));
     sc::buffer<Sphere, 1> oBuf(objects.data(), sc::range<1>(objects.size()));
     sc::buffer<sc::float3, 1> iBuf(floatImage, sc::range<1>(width* height));
     sc::buffer<int, 1> sBuf(seeds, sc::range<1>(width* height));
-    sc::buffer<Triangle, 1> tBuf(tObjects.data(), sc::range<1>(tObjects.size()));
+    sc::buffer<Triangle, 1> tBuf(tStack.data(), sc::range<1>(tStack.size()));
+    sc::buffer<MeshStage, 1> mBuf(mObjects.data(), sc::range<1>(mObjects.size()));
+    sc::buffer<kdTreeMesh, 1> kBuf(kVec.data(), sc::range<1>(kVec.size()));
 
-    const int objSize = objects.size();
-    const int tobjSize = tObjects.size();
+//    const int objSize = objects.size();
+//    const int tobjSize = tStack.size();
+//
+//    Mesh me = Mesh(tStack.data(), s1);
+//    material::intersectReturn re = me.tBoxIntersect(rays[width/2 + (height/2)*width]);
+//
+//    std::cout << re.intersect << std::endl;
 
     queue.submit([&](sc::handler &cgh){
         auto r_acc = rBuf.get_access<sc::access::mode::read>(cgh);
         auto o_acc = oBuf.get_access<sc::access::mode::read>(cgh);
-        auto s_acc = sBuf.get_access<sc::access::mode::read>(cgh);
+//        auto s_acc = sBuf.get_access<sc::access::mode::read>(cgh);
         auto i_acc = iBuf.get_access<sc::access::mode::write>(cgh);
-        auto t_acc = tBuf.get_access<sc::access::mode::read>(cgh);
+//        auto t_acc = tBuf.get_access<sc::access::mode::read>(cgh);
+//        auto m_acc = mBuf.get_access<sc::access::mode::read>(cgh);
+        auto k_acc = kBuf.get_access<sc::access::mode::read>(cgh);
         cgh.parallel_for<tracer>(sc::range<2>(width,height),
                 [=](sc::id<2> idx){
             int x = idx[0];
             int y = idx[1];
             Ray initialRay = r_acc[x+y*width];
             Ray r;
-            Ray reflect;
+//            Ray reflect;
             bool intersect = false;
-            float minDist = MAXFLOAT;
-            int seed = s_acc[x+y*width];
+//            float minDist = MAXFLOAT;
+            int seed = (x*y*reflections*samples);
+            fastrand(&seed);
+            fastrand(&seed);
             sc::float3 sum = {0,0,0};
-            int samples = 1;
+            bool hitMesh = false;
             for(int i = 0; i<samples; i++) {
                 sc::float3 color = {0,0,0};
                 r = initialRay;
-//                material::intersectReturn obj{};
-                const Sphere *obj;
-                const Triangle *tobj;
-                bool isTriangle;
-                for (int j = 0; j < 3; j++) {
+////                material::intersectReturn obj{};
+//                const Sphere *obj;
+                material::intersectReturn tobj;
+
+                material::intersectReturn lastIntersect = material::intersectReturn();
+                for (int j = 0; j < reflections; j++) {
                     intersect = false;
-                    minDist = 99999999990;
-                    //RNG.setSeed(RNG.getSeed()*(x+1)/(y+1));
+                    float minDist = FLT_MAX;
                     for (int k = 0; k < o_acc.get_count(); k++) {
-//                        material::intersectReturn t = o_acc[k].srayIntersect(r);
-//                        Ray t_reflect = Ray(t.hitpoint, t.normal);
-//                        bool t_intersect = t.intersect;
-
-                        Ray t_reflect = r;
-                        bool t_intersect;
-
-                        //o_acc[k].pRayIntersect(r, &t_reflect, &t_intersect);
-
-                        float dist = o_acc[k].fRayIntersect(r);
-                        t_intersect = dist!=-1;
-//                        r = Ray(r.getOrigin()+(r.getDirection()*dist),
-//                                r.getOrigin()+(r.getDirection()*dist) - o_acc[k].getCenter());
-
-                        t_intersect=false;
-
-                        //std::tie(t_reflect, t_intersect) = o_acc[k].rayIntersect(r);
-
-//                        float hitDistance = o_acc[k].fRayIntersect(r);
-//
-//                        if(hitDistance!=-1 && minDist>hitDistance){
-//                            minDist = hitDistance;
-//                            float dist = sc::fast_length(r.getOrigin() - t_reflect.getOrigin());
-//                            sc::float3 hitPoint = r.getOrigin() + (hitDistance * sc::normalize(r.getDirection()));
-//                            sc::float3 normal = sc::normalize(hitPoint - o_acc[k].getCenter());
-//                            reflect = Ray(hitPoint, normal);
-//                            intersect = true;
-//                            obj = &o_acc[k];
-//                        }
-
-                        if (t_intersect) {
-                            //float dist = sc::fast_length(r.getOrigin() - t_reflect.getOrigin());
-                            if (minDist > dist) {
-                                minDist = dist;
-                                reflect = t_reflect;
-                                intersect = true;
-                                //obj = t;
-                                obj = &o_acc[k];
-                                isTriangle = false;
-                                //-normal = sc::normalize(o_acc[k].getCenter()-t_reflect.getOrigin());
-                            }
+                        material::intersectReturn ret = o_acc[k].mRayIntersect(r, k);
+                        if(ret==lastIntersect)
+                            continue;
+                        if (ret.intersect
+                            && ret.intersectDistance<minDist) {
+                            intersect = true;
+                            minDist = ret.intersectDistance;
+                            tobj = ret;
                         }
                     }
-
-                    for (int k = 0; k < t_acc.get_count(); k++) {
-                        material::intersectReturn t = t_acc[k].rayIntersect(r);
-                        Ray t_reflect = Ray(t.hitpoint, t.normal);
-                        bool t_intersect = t.intersect;
-
-                        if (t_intersect) {
-                            float dist = sc::fast_length(r.getOrigin() - t_reflect.getOrigin());
-                            if (minDist > dist) {
-                                minDist = dist;
-                                reflect = t_reflect;
-                                intersect = true;
-                                tobj = &t_acc[k];
-                                isTriangle = true;
-                            }
+                    for (int k = 0; k < k_acc.get_count(); ++k) {
+                        material::intersectReturn t_intersect = k_acc[k].mRayIntersect(r, lastIntersect);
+                        if (t_intersect.intersect
+                            && t_intersect.intersectDistance<minDist) {
+                            intersect = true;
+                            hitMesh = true;
+                            minDist = t_intersect.intersectDistance;
+                            tobj = t_intersect;
                         }
                     }
-
-//                    if (intersect) {
-//                        if (obj.isEmissive()) {
-//                            color = obj.getPixelEmissive(r);
-//                        } else {
-//                            sc::float4 randVec = sc::normalize(sc::float4(fastrand(&seed), fastrand(&seed), fastrand(&seed), fastrand(&seed)));
-//                            r = obj.reflect(r, BoxMueller3(randVec));
-//                            //r = obj->reflect(r, reflect, reflect.getDirection());
-//                            //r=reflect;
-//                        }
-////                        color = {100,100,100};
-//                    }
 
                     if (intersect) {
-                        if(!isTriangle) {
-                            if (obj->isEmissive()) {
-                                color = obj->getPixelEmissive(r);
-                                j=10;
-                            } else {
-//                                sc::float4 randVec = sc::normalize(
-//                                        sc::float4(fastrand(&seed), fastrand(&seed), fastrand(&seed), fastrand(&seed)));
-//                                r = obj->reflect(r, reflect, BoxMueller3(randVec));
-                                //r = obj->reflect(r, reflect, reflect.getDirection());
-                                //r=reflect;
+                        if (tobj.isEmissive()) {
+                            color = tobj.getPixelEmissive(r);
+                            if(j==0){
+                                sum = tobj.getPixelEmissive(r)*samples;
+                                goto imageWrite;
                             }
+                            break;
+                        } else {
+                            sc::float4 randVec = sc::normalize(
+                                    sc::float4(fastrand(&seed), fastrand(&seed), fastrand(&seed), fastrand(&seed)));
+                            r = tobj.reflect(r, BoxMueller3(randVec));
                         }
-                        else{
-                            if (tobj->isEmissive()) {
-                                color = tobj->getPixelEmissive(r);
-                                j=10;
-                            } else {
-                                color={100,100,100};
-//                                sc::float4 randVec = sc::normalize(
-//                                        sc::float4(fastrand(&seed), fastrand(&seed), fastrand(&seed), fastrand(&seed)));
-//                                r = tobj->reflect(r, reflect, BoxMueller3(randVec));
-//                                //r = obj->reflect(r, reflect, reflect.getDirection());
-//                                //r=reflect;
-                            }
-                        }
-                        j=10;
                     }
 
                     else{
-                        color = r.getLuminance()*sc::float3({70,30,130});
-                        j=10;
+                        color = r.getLuminance()*sc::float3({70,30,170});
+                        if(j==0){
+                            sum = sc::float3({70,30,170})*samples;
+                            goto imageWrite;
+                        }
+                        break;
                     }
+                    lastIntersect=tobj;
                 }
                 sum+=color;
-                //sum+= normal*255;
             }
-//            sc::float3 normal = sc::float3{-255,-255,-255} * sc::normalize(reflect.getDirection());
-//            normal = intersect ? normal : sc::float3({0,0,0});
-//            i_acc[x+y*width] = sc::float3({0,0,0}) + (normal*intersect);
+            imageWrite:
+            i_acc[x+y*width] = sc::clamp((sum/samples) + hitMesh*sc::float3(50,50,50), 0.0f, 255.0f);
 
-            //i_acc[x+y*width] = (sum/samples).x() > 255 ? sc::float3({255, 255, 255}) : sum/samples;
-            i_acc[x+y*width] = sc::clamp(sum/samples, 0.0f, 255.0f);
-//            i_acc[x+y*width] = sum/samples;
-            //i_acc[x+y*width] = sum/samples;
-//                    RRand = Random(RRand.state);
-//                    float xr = RRand.value;
-//                    RRand = Random(RRand.state);
-//                    float yr = RRand.value;
-//                    RRand = Random(RRand.state);
-//                    float zr = RRand.value;
-//                    i_acc[x+y*width] = sc::float3({xr,yr,zr})*255;
+//            i_acc[x+y*width] = sc::clamp((k_acc[0].mRayIntersect(initialRay, material::intersectReturn()).intersect * sc::float3(200,200,200)), 0.0f, 255.0f);
+//            i_acc[x+y*width] = sc::clamp((ret.intersect * sc::float3(200,200,200)), 0.0f, 255.0f);
+//            i_acc[x+y*width] = sc::clamp(k_acc[0].mRayIntersect(initialRay).intersect * sc::float3(50,50,50), 0.0f, 255.0f);
+//            auto m = Mesh(t_acc.get_pointer(), m_acc[0]);
+//            i_acc[x+y*width] = sc::clamp(m.tBoxIntersect(initialRay).intersect * sc::float3(50,50,50), 0.0f, 255.0f);
         });
     });
 
@@ -321,14 +231,15 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    QApplication a(argc, argv);
     //QPushButton button("Hello world!", nullptr);
     //button.resize(200, 100);
     //button.show();
+    QApplication a(argc, argv);
     QLabel label;
     label.setPixmap(QPixmap::fromImage(image));
     label.show();
     return QApplication::exec();
+
 
 //    return 0;
 }

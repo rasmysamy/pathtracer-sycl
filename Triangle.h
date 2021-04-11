@@ -6,28 +6,38 @@
 #define PATHTRACER_SYCL_TRIANGLE_H
 
 #include "Ray.h"
+
 #include "Material.h"
 
-const float EPSILON = 0.00005;
+const float EPSILON = 0.00000000000005;
 
 class Triangle {
-    sc::float3 attr_1;
-    int material;
 //    sc::float3 normal = {0,0,0};
 //    sc::float3 barycenter = {0,0,0};
 //    bool flatShaded = true;
 //    sc::float3 vn0, vn1, vn2 = {0,0,0};
 public:
     sc::float3 v0, v1, v2;
-    Triangle()= default;;
-    Triangle(sc::float3 a, sc::float3 b, sc::float3 c): v0(a), v1(b), v2(c), material(material::MATERIALS::Diffuse), attr_1({.9,.9,.9}){}
-    Triangle(sc::float3 a, sc::float3 b, sc::float3 c, sc::float3 color, int mat): v0(a), v1(b), v2(c), material(mat), attr_1(color){}
+    sc::float3 v1n, v2n, v3n;//This should always be normalized
+    bool isFlat;
+    Triangle()= default;
+    sc::float3 getCenter() const{ return (v0+v1+v2)/3;};
 
-    inline sc::float3 barycentric2Cartesian(const sc::float3& bary) const {
+    Triangle(const sc::float3 &v0, const sc::float3 &v1, const sc::float3 &v2,
+             const sc::float3 &v1N, const sc::float3 &v2N, const sc::float3 &v3N, bool isFlat) : v0(
+            v0), v1(v1), v2(v2), v1n(v1N), v2n(v2N), v3n(v3N), isFlat(isFlat) {}
+
+    sc::float3 barycentric2Cartesian(const sc::float3& bary) const {
         return bary.x()*v0 + bary.y()*v1 + bary.z()*v2;
     }
 
-    material::intersectReturn rayIntersect(const Ray& r) const {
+    sc::float3 cartesian2Barycentric(const sc::float3 cart){
+
+    }
+
+    sc::float3 getFlatNormal(const sc::float3&){}
+
+    material::intersectReturn rayIntersect(const Ray& r, int material, sc::float3 attr_1, float attr_2) const {
         float t, u, v;
         // We will use the Moller-Trumbore algorithm for ray intersection
         // We thus use cramer's rule to solve for t, u, v in the following vector equation:
@@ -41,8 +51,10 @@ public:
 
         ret.material = material;
         ret.attr_1 = attr_1;
+        ret.attr_2 = attr_2;
         ret.objType = 1;
         ret.intersect = false;
+        ret.intersectDistance = -1;
 
         sc::float3 T = r.getOrigin()-v0;
         sc::float3 v0v1 = (v1-v0);
@@ -67,6 +79,9 @@ public:
             return ret;
 
         t = iDet * sc::dot(Q, v0v2);
+
+        if(t<EPSILON)
+            return ret;
 //
         sc::float3 point = r.getOrigin() + t*r.getDirection();
         sc::float3 norm = sc::normalize(sc::cross(v0v1, v0v2));
@@ -82,15 +97,16 @@ public:
         ret.hitpoint = point;
         ret.intersect = true;
         ret.normal = sc::dot(norm, r.getDirection())<0 ? norm : -norm;
+        ret.intersectDistance = t;
 
         return ret;
         //return std::tuple(r, false);
     }
 
-    bool isEmissive() const {return material==material::MATERIALS::Emissive;}
-    Ray reflect(const Ray& incident, const Ray& normal, sc::float3 rand) const {
-        return material::reflectMat(incident, normal, attr_1, material, rand);
+    sc::float3 getNormal() const{
+        return sc::cross(v0-v1, v2-v1);
     }
+
     sc::float3 getPixelEmissive(const Ray& incident) const {return material::getPixelColor(incident, attr_1);}
 };
 
