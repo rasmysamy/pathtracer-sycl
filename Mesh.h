@@ -5,18 +5,18 @@
 #ifndef PATHTRACER_SYCL_MESH_H
 #define PATHTRACER_SYCL_MESH_H
 
+#pragma once
 
 #include <utility>
 
 #include "Triangle.h"
 #include "AABB.h"
 
-#define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
 
 using material::MATERIALS;
 
-AABB generateBoundingVolume(std::vector<Triangle> tVec) {
+AABB generateBoundingVolume(std::vector<Triangle> &tVec) {
     sc::float3 min, max;
     for(Triangle t : tVec){
         sc::float3 a, b, c;
@@ -91,9 +91,9 @@ std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
             tinyobj::real_t vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
             tinyobj::real_t vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
 
-            tinyobj::real_t vnx = attrib.normals[3*size_t(idx.vertex_index)+0];
-            tinyobj::real_t vny = attrib.normals[3*size_t(idx.vertex_index)+1];
-            tinyobj::real_t vnz = attrib.normals[3*size_t(idx.vertex_index)+2];
+            tinyobj::real_t vnx = attrib.normals[3*size_t(idx.normal_index)+0];
+            tinyobj::real_t vny = attrib.normals[3*size_t(idx.normal_index)+1];
+            tinyobj::real_t vnz = attrib.normals[3*size_t(idx.normal_index)+2];
             sc::float3 A = {vx, vz, -vy};//This corrects for Blender's coordinate system (Z-Up).
             sc::float3 An = {vnx, vnz, -vny};
             v++;
@@ -102,9 +102,9 @@ std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
             vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
             vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
 
-            vnx = attrib.normals[3*size_t(idx.vertex_index)+0];
-            vny = attrib.normals[3*size_t(idx.vertex_index)+1];
-            vnz = attrib.normals[3*size_t(idx.vertex_index)+2];
+            vnx = attrib.normals[3*size_t(idx.normal_index)+0];
+            vny = attrib.normals[3*size_t(idx.normal_index)+1];
+            vnz = attrib.normals[3*size_t(idx.normal_index)+2];
             sc::float3 B = {vx, vz, -vy};
             sc::float3 Bn = {vnx, vnz, -vny};
             v++;
@@ -113,22 +113,25 @@ std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
             vy = attrib.vertices[3*size_t(idx.vertex_index)+1];
             vz = attrib.vertices[3*size_t(idx.vertex_index)+2];
 
-            vnx = attrib.normals[3*size_t(idx.vertex_index)+0];
-            vny = attrib.normals[3*size_t(idx.vertex_index)+1];
-            vnz = attrib.normals[3*size_t(idx.vertex_index)+2];
+            vnx = attrib.normals[3*size_t(idx.normal_index)+0];
+            vny = attrib.normals[3*size_t(idx.normal_index)+1];
+            vnz = attrib.normals[3*size_t(idx.normal_index)+2];
             sc::float3 C = {vx, vz, -vy};
             sc::float3 Cn = {vnx, vnz, -vny};
             v++;
 
-            bool isFlat=(vectorEquals(Cn, Bn) && vectorEquals(An, Bn));
-
-            triangleVec.emplace_back(Triangle(A,B,C,An,Bn,Cn, isFlat));
+            bool isFlat=(vectorEquals(Cn, Bn) && vectorEquals(An, Bn)); //right now we don't support smooth normals
+            if(isFlat){
+                An = (An+Cn+Bn)/3;
+            }
+            triangleVec.emplace_back(Triangle(A,B,C,An,An,An, true));
 
             index_offset += fv;
         }
     }
 
     boundingVolume = generateBoundingVolume(triangleVec);
+    return triangleVec;
 }
 
 //class MeshStage{

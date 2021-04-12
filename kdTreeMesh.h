@@ -8,6 +8,7 @@
 #include "Triangle.h"
 #include "AABB.h"
 #include "Material.h"
+#include "Mesh.h"
 #include <stack>
 
 
@@ -138,7 +139,7 @@ struct kdTreeNode{
         float minDist = FLT_MAX;
         material::intersectReturn t = material::intersectReturn();
         for (int i = 0; i < nmPrimitives; ++i) {
-            material::intersectReturn ret = triangles[i].rayIntersect(r);
+            material::intersectReturn ret = triangles[i].rayIntersect(r, mat.material, mat.attr_1, mat.attr_2);
             if(ret.intersect && ret.intersectDistance<minDist && (int)((triangles + i) - ref)!=lastIntersect.stackPos){
                 minDist = ret.intersectDistance;
                 ret.stackPos=(int)((triangles + i) - ref);//This is basically a cheap way of getting a hash

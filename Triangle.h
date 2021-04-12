@@ -18,24 +18,26 @@ class Triangle {
 //    sc::float3 vn0, vn1, vn2 = {0,0,0};
 public:
     sc::float3 v0, v1, v2;
-    sc::float3 v1n, v2n, v3n;//This should always be normalized
+    sc::float3 v0n, v1n, v2n;//This should always be normalized
     bool isFlat;
     Triangle()= default;
     sc::float3 getCenter() const{ return (v0+v1+v2)/3;};
 
     Triangle(const sc::float3 &v0, const sc::float3 &v1, const sc::float3 &v2,
              const sc::float3 &v1N, const sc::float3 &v2N, const sc::float3 &v3N, bool isFlat) : v0(
-            v0), v1(v1), v2(v2), v1n(v1N), v2n(v2N), v3n(v3N), isFlat(isFlat) {}
+            v0), v1(v1), v2(v2), v0n(v1N), v1n(v2N), v2n(v3N), isFlat(isFlat) {}
 
     sc::float3 barycentric2Cartesian(const sc::float3& bary) const {
         return bary.x()*v0 + bary.y()*v1 + bary.z()*v2;
     }
 
     sc::float3 cartesian2Barycentric(const sc::float3 cart){
-
+        return {0,0,0};
     }
 
-    sc::float3 getFlatNormal(const sc::float3&){}
+    sc::float3 getFlatNormal() const{
+        return v0n;
+    }
 
     material::intersectReturn rayIntersect(const Ray& r, int material, sc::float3 attr_1, float attr_2) const {
         float t, u, v;
@@ -84,7 +86,7 @@ public:
             return ret;
 //
         sc::float3 point = r.getOrigin() + t*r.getDirection();
-        sc::float3 norm = sc::normalize(sc::cross(v0v1, v0v2));
+        sc::float3 norm = getFlatNormal();
 
         //norm = normal; Flat shading, triangle normals
         //norm = vn0*t + vn1*u + vn2*v;
@@ -96,7 +98,7 @@ public:
 
         ret.hitpoint = point;
         ret.intersect = true;
-        ret.normal = sc::dot(norm, r.getDirection())<0 ? norm : -norm;
+        ret.normal = norm;
         ret.intersectDistance = t;
 
         return ret;
@@ -107,7 +109,7 @@ public:
         return sc::cross(v0-v1, v2-v1);
     }
 
-    sc::float3 getPixelEmissive(const Ray& incident) const {return material::getPixelColor(incident, attr_1);}
+//    sc::float3 getPixelEmissive(const Ray& incident) const {return material::getPixelColor(incident, attr_1);}
 };
 
 
