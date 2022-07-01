@@ -33,15 +33,15 @@ public:
         int colorG;
         int colorB;
         int materialType;
-        int refractIndex;
+        float refractIndex;
 
-        polygonData(QString pathName, QString meshPath, int objType, float positionX, float positionY, float positionZ, float radius, float directionX, float directionY, float directionZ, int colorR, int colorG, int colorB, int materialType, int refractIndex){
+        polygonData(QString pathName, QString meshPath, int objType, float positionX, float positionY, float positionZ, float radius, float directionX, float directionY, float directionZ, int colorR, int colorG, int colorB, int materialType, float refractIndex){
             this->pathName = pathName;
             this->meshPath = meshPath;
             this->objType = objType;
             this->positionX = positionX;
             this->positionY = positionY;
-            this->positionY = positionZ;
+            this->positionZ = positionZ;
             this->radius = radius;
             this->directionX = directionX;
             this->directionY = directionY;
@@ -70,7 +70,7 @@ public:
         float positionZ = (float)json.value("positionZ").toDouble();
         float directionX = (float)json.value("directionX").toDouble();
         float directionY = (float)json.value("directionY").toDouble();
-        float directionZ = json.value("directionZ").toDouble();
+        float directionZ = (float)json.value("directionZ").toDouble();
         int colorR = json.value("colorR").toInt();
         int colorG = json.value("colorG").toInt();
         int colorB = json.value("colorB").toInt();

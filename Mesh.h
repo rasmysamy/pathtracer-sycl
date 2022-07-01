@@ -16,7 +16,7 @@
 
 using material::MATERIALS;
 
-AABB generateBoundingVolume(std::vector<Triangle> &tVec) {
+inline AABB generateBoundingVolume(std::vector<Triangle> &tVec) {
     sc::float3 min, max;
     for(Triangle t : tVec){
         sc::float3 a, b, c;
@@ -54,11 +54,11 @@ AABB generateBoundingVolume(std::vector<Triangle> &tVec) {
     return AABB(min, max);
 }
 
-bool vectorEquals(sc::float3 a, sc::float3 b){
+inline bool vectorEquals(sc::float3 a, sc::float3 b){
     return a[0]==a[0] && a[1]==b[1] && a[2]==b[2];
 }
 
-std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
+inline std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
     auto triangleVec = std::vector<Triangle>();
     tinyobj::ObjReaderConfig reader_config;
 

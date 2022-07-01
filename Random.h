@@ -23,6 +23,7 @@ inline int fastrand(int *g_seed) {
     *g_seed = (214013*(*g_seed)+2531011);
     return (*g_seed>>16)&0x7FFF;
 }
+
 inline sc::float4 BoxMueller(sc::float4 uniformRandomUnit){
     float a = uniformRandomUnit.x();
     float b = uniformRandomUnit.y();

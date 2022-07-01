@@ -195,16 +195,6 @@ public:
             lNodes = newLNodes;
         }
     }
-//    void finalizeLeafSharedMemory(sc::queue q){
-//        auto *sharedData = sc::malloc_shared<kdTreeNode*>(nbLeafNodes, q);
-//        for (int i = 0; i < nbLeafNodes; ++i) {
-//            leafNodes[i]->finalizeLeafSharedMemory(q);
-//            auto *nodePtr = sc::malloc_shared<kdTreeNode>(1, q);
-//            std::copy(nodePtr, nodePtr, leafNodes[i]);
-//            sharedData[i] = nodePtr;
-//        }
-//        leafNodes = sharedData;
-//    }
     struct visitFlag{
         bool seenFirst=false;
         bool seenSecond=false;
@@ -212,8 +202,8 @@ public:
     material::intersectReturn mRayIntersect(const Ray &r, material::intersectReturn lastIntersect) const{
         //This code is a stub for kdTree-ray intersection. It misses collision due to missing AABB collision point data
         kdTreeNode currentNode = parentNode;
-        kdTreeNode visitedList[32];
-        kdTreeMesh::visitFlag vFlags[32];
+        kdTreeNode visitedList[20];
+        kdTreeMesh::visitFlag vFlags[20];
         material::intersectReturn ret;
         int currentDepth = 0;
         if(!(currentNode.bound->bRayIntersect(r))) {
@@ -280,5 +270,10 @@ public:
     kdTreeNode getParentNode(){
         return parentNode;
     }
+
+    const materialBase &getM() const {
+        return m;
+    }
+
 };
 #endif //PATHTRACER_SYCL_KDTREEMESH_H

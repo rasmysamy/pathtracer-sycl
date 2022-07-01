@@ -14,7 +14,7 @@
 
 namespace material {
     enum MATERIALS {
-        Diffuse = 0, Emissive = 1, Glossy = 2, Glass = 4
+        Diffuse = 0, Emissive = 1, Glossy = 2, Glass = 3
     };
 
     inline sc::float3 getPixelColor(const Ray &incident, sc::float3 emissivity) {
@@ -32,12 +32,10 @@ namespace material {
         int stackPos = -1;
         int objType = -1;
 
-
-
-        bool isEmissive() const{return material==MATERIALS::Emissive;};
+        bool isEmissive() const{return material==MATERIALS::Emissive;}
         sc::float3 getPixelEmissive(const Ray& incident) const{
             return getPixelColor(incident, attr_1);
-        };
+        }
         Ray diffuseReflect(const Ray& incident, sc::float3 rand) const{
             rand = sc::normalize(rand);
             if(sc::dot(rand, normal) < 0)
@@ -45,11 +43,11 @@ namespace material {
             Ray rRay = Ray(hitpoint+(normal*NORMAL_RECTIFICATION_COEFFICIENT), rand, attr_1 * incident.getLuminance());
             return rRay;
         }
-        Ray glossyReflect(const Ray& incident, sc::float3 rand) const{
+        Ray glossyReflect(const Ray& incident, sc::float3 rand) const{ // This calculates a glossy reflection, which is mirror reflection with some blur defined by roughness.
             rand = sc::normalize(rand);
             float normalL = sc::dot(-incident.getDirection(), normal);
             sc::float3 normalProj = normal * normalL;
-            sc::float3 reflect = sc::normalize((incident.getDirection()) + 2*normalProj);
+            sc::float3 reflect = incident.getDirection() - (2*sc::dot(incident.getDirection(), normal)*normal);
             if(sc::dot(rand, reflect) < 0)
                 rand = -rand;
             sc::float3 scatterDir = reflect + attr_2*rand;
@@ -75,10 +73,10 @@ namespace material {
             float rPPolarization = ((incidentRayIndex * cosIncident) - (mediaIndex * cosTheta2)) / ((incidentRayIndex * cosIncident) + (mediaIndex * cosTheta2));
             return (rSPolarization * rSPolarization + rPPolarization * rPPolarization) / 2; //We take the average of the reflectances for the two polarizations
         }
-        Ray glass(const Ray& incident, int rand) const{
+        Ray glass(const Ray& incident, int rand) const{ //This calculates glass media changes, which may reflect the light or let it pass through.
             auto n = normal;
             sc::float3 hitPointRectified = hitpoint + -n*NORMAL_RECTIFICATION_COEFFICIENT;
-            float cosIncidentAngle = sc::clamp(sc::dot(incident.getDirection(), normal), -1, 1);
+            float cosIncidentAngle = sc::clamp(sc::dot(incident.getDirection(), normal), -1.0f, 1.0f);
             float incidentRayIndex = 1, mediaIndex = attr_2;
             float iorRatio = incidentRayIndex / mediaIndex;
             float k = 1 - iorRatio * iorRatio * (1 - cosIncidentAngle * cosIncidentAngle);
@@ -96,7 +94,7 @@ namespace material {
             sc::float3 refractDirection = iorRatio * incident.getDirection() + (iorRatio * cosIncidentAngle - sc::sqrt(k)) * n;
             return Ray(hitPointRectified, refractDirection, attr_1*incident.getLuminance() * (1-r));
         }
-        Ray reflect(const Ray& incident, sc::float4 rand, int randNum) const{
+        Ray reflect(const Ray& incident, sc::float4 rand, int randNum) const{ //Dispatches the correct function based on ray type.
             if(material==MATERIALS::Glass)
                 return glass(incident, randNum);
             sc::float3 rand3 = sc::float3(BoxMueller(rand).x(), BoxMueller(rand).y(), BoxMueller(rand).z());

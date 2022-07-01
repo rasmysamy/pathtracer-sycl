@@ -67,7 +67,9 @@
 cmake_minimum_required(VERSION 3.17)
 project(pathtracer-sycl)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++")
+
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -80,7 +82,7 @@ set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
 
 add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h mainwindow.cpp)
 
-set(HIPSYCL_TARGETS cuda:sm_60)
+set(HIPSYCL_TARGETS cuda:sm_86)
 #set(HIPSYCL_TARGETS omp)
 find_package(hipSYCL REQUIRED)
 add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h Mesh.h mainwindow.cpp mainwindow.h)
@@ -93,6 +95,7 @@ endif ()
 find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${REQUIRED_LIBS_QUALIFIED})
 
+#set(CMAKE_CXX_COMPILER /opt/rocm/llvm/bin/clang++)
 target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -fcuda-approx-transcendentals -fcuda-flush-denormals-to-zero -Xcuda-ptxas -maxrregcount=64)
-#target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=leak -fsanitize=undefined -fsanitize=address)
+#target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 #target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=leak -fsanitize=undefined -fsanitize=address)
