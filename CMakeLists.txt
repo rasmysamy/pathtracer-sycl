@@ -82,7 +82,7 @@ set(REQUIRED_LIBS Core Gui Widgets)
 set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
 
 #add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h mainwindow.cpp)
-add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h)
+add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h scene.cpp scene.h)
 
 
 set(HIPSYCL_TARGETS cuda:sm_86)
@@ -100,6 +100,6 @@ find_package(Qt${QT_VERSION} COMPONENTS ${REQUIRED_LIBS} REQUIRED)
 target_link_libraries(${PROJECT_NAME} PRIVATE ${REQUIRED_LIBS_QUALIFIED})
 
 #set(CMAKE_CXX_COMPILER /opt/rocm/llvm/bin/clang++)
-target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -fcuda-approx-transcendentals -fcuda-flush-denormals-to-zero -Xcuda-ptxas -maxrregcount=64)
+target_compile_options(${PROJECT_NAME} PRIVATE -Ofast -fcuda-approx-transcendentals -fcuda-flush-denormals-to-zero -Xcuda-ptxas -maxrregcount=70)
 #target_compile_options(${PROJECT_NAME} PRIVATE -O3)
 #target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=leak -fsanitize=undefined -fsanitize=address)

@@ -3,6 +3,7 @@
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "mainwindow.h"
 #include "Trace.h"
+#include "scene.h"
 #include <fstream>
 
 using material::MATERIALS;
@@ -12,10 +13,10 @@ int main(int argc, char *argv[]) {
 //    int height = ui->resY->value();
 //    int reflections = 8;
 //    int samples = ui->spp->value();
-    int width = 1280;
-    int height = 720;
-    int reflections = 5;
-    int samples = 10;
+    int width = 1920;
+    int height = 1080;
+    int reflections = 6;
+    int samples = 5000;
 
 
 //    sc::device device{sc::cpu_selector()};
@@ -35,7 +36,7 @@ int main(int argc, char *argv[]) {
 //    }
     QImage image = QImage(width, height, QImage::Format_RGB32);
 
-    Camera camera = Camera({0, -10, -1.5}, {0, 1, 0}, 90, 0, width, height);
+    Camera camera = Camera({0, -10, -0.7}, {0, 1, 0}, 90, 0, width, height);
     auto rays = new Ray[width * height];
     for (int x = 0; x < width; ++x) {
         for (int y = 0; y < height; ++y) {
@@ -56,135 +57,89 @@ int main(int argc, char *argv[]) {
     }
 
     std::vector<kdTreeMesh> kVec = std::vector<kdTreeMesh>();
-    AABB bounds = AABB();
-    auto tris = readMesh(bounds, "dragon-low.obj");
-    materialBase mat = materialBase({.9, .9, .9}, 1.4, MATERIALS::Glass);
-    kVec.emplace_back(kdTreeMesh(tris, bounds, 15, 20, q, mat));
-    mat = materialBase({.8, .8, .8}, .0, MATERIALS::Diffuse);
-    tris = readMesh(bounds, "plane.obj");
-    kVec.emplace_back(kdTreeMesh(tris, bounds, 15, 20, q, mat));
+//    AABB bounds = AABB();
+//    auto tris = readMesh(bounds, "dragon-low.obj");
+//    materialBase mat = materialBase({.9, .9, .9}, 1.4, MATERIALS::Glass);
+//    kVec.emplace_back(kdTreeMesh(tris, bounds, 13, 5, q, mat));
+//    mat = materialBase({.8, .8, .8}, .0, MATERIALS::Diffuse);
+//    tris = readMesh(bounds, "plane.obj");
+//    kVec.emplace_back(kdTreeMesh(tris, bounds, 5, 20, q, mat));
     auto floatImage = new sc::float3[width * height];
 
-    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            std::chrono::system_clock::now().time_since_epoch());
-    std::vector<Sphere> objects = std::vector<Sphere>();
-    objects.push_back(Sphere({-20, -20, -4}, .1, sc::float3({255, 255, 255}) * 0, MATERIALS::Emissive, 1));//Hidden sphere
-    auto spheres = std::vector<Sphere>();
-    auto meshes = std::vector<std::tuple<kdTreeMesh, std::string>>();
-    if (spheres.size() != 0)
-        objects = spheres;
 
-    if (meshes.size() != 0) {
-        kVec.clear();
-        for (auto t : meshes) {
-            kVec.push_back(std::get<kdTreeMesh>(t));
-        }
-    }
+    std::vector<Sphere> objects = std::vector<Sphere>();
+//    auto spheres = std::vector<Sphere>();
+//    spheres.push_back(Sphere({-0, -0, -4}, 1, sc::float3({255, 255, 255}) * 10, MATERIALS::Emissive, 1));//Hidden sphere
+//    auto meshes = std::vector<std::tuple<kdTreeMesh, std::string>>();
+    scene s{};
+    s.makeScene(kVec, objects, q);
+
+//    if (spheres.size() != 0)
+//        objects = spheres;
+//
+//    if (meshes.size() != 0) {
+//        kVec.clear();
+//        for (auto t : meshes) {
+//            kVec.push_back(std::get<kdTreeMesh>(t));
+//        }
+//    }
 
 
     sc::buffer<Ray, 1> rBuf(rays, sc::range<1>(width * height));
     sc::buffer<Sphere, 1> oBuf(objects.data(), sc::range<1>(objects.size()));
     sc::buffer<sc::float3, 1> iBuf(floatImage, sc::range<1>(width * height));
     sc::buffer<kdTreeMesh, 1> kBuf(kVec.data(), sc::range<1>(kVec.size()));
+    sc::buffer<int, 1> sBuf(seeds, sc::range<1>(width * height));
 
-    int colorR = (int) 80;
-    int colorG = (int) 80;
-    int colorB = (int) 160;
+    int colorR = (int) 120;
+    int colorG = (int) 120;
+    int colorB = (int) 255;
 
     sc::float3 skyColor(colorR, colorG, colorB);
 
     std::cout << q.get_device().get_info<sc::info::device::name>() << std::endl;
-
+    std::vector<sc::event*> events;
+    int step = 10;
+    for(int i = 0; i < samples; i+=step){
     sc::event tracingEvent = q.submit([&](sc::handler &cgh) {
-        trace(cgh, rBuf, oBuf, iBuf, kBuf, width, height, reflections, samples, skyColor);
-//        auto r_acc = rBuf.get_access<sc::access::mode::read>(cgh);
-//        auto o_acc = oBuf.get_access<sc::access::mode::read>(cgh);
-//        auto i_acc = iBuf.get_access<sc::access::mode::write>(cgh);
-//        auto k_acc = kBuf.get_access<sc::access::mode::read>(cgh);
-//        cgh.parallel_for<pathtracing>(sc::range<2>(width, height), [=](sc::id<2> idx) {
-//            int x = idx[0];
-//            int y = idx[1];
-//            Ray initialRay = r_acc[x + y * width];
-//            Ray r;
-//            bool intersect;
-//            int seed = (x * y * reflections * samples);
-//            fastrand(&seed);
-//            fastrand(&seed);
-//            sc::float3 sum = {0, 0, 0};
-//            //We initialize values necessary for the path tracing code.
-//            for (int i = 0; i < samples; i++) {
-//                sc::float3 color = {0, 0, 0};
-//                r = initialRay;
-//
-//                material::intersectReturn tobj;
-//
-//                material::intersectReturn lastIntersect = material::intersectReturn();
-//                for (int j = 0; j < reflections; j++) {
-//                    intersect = false;
-//                    float minDist = FLT_MAX;
-//                    for (int k = 0; k < o_acc.get_count(); k++) {
-//                        material::intersectReturn ret = o_acc[k].mRayIntersect(r, k);
-//                        if (ret == lastIntersect)
-//                            continue;
-//                        if (ret.intersect
-//                            && ret.intersectDistance < minDist) {
-//                            intersect = true;
-//                            minDist = ret.intersectDistance;
-//                            tobj = ret;
-//                        }
-//                    }
-//                    for (int k = 0; k < k_acc.get_count(); ++k) {
-//                        material::intersectReturn t_intersect = k_acc[k].mRayIntersect(r, lastIntersect);
-//                        if (t_intersect.intersect
-//                            && t_intersect.intersectDistance < minDist) {
-//                            intersect = true;
-////                            hitMesh = true;
-//                            minDist = t_intersect.intersectDistance;
-//                            tobj = t_intersect;
-//                        }
-//                    }
-//
-//                    if (intersect) {
-//                        if (tobj.isEmissive()) {
-//                            color = tobj.getPixelEmissive(r);
-//                            if (j == 0) {
-//                                sum = tobj.getPixelEmissive(r) * samples;
-//                                goto imageWrite;
-//                            }
-//                            break;
-//                        } else {
-//                            sc::float4 randVec = sc::normalize(
-//                                    sc::float4(fastrand(&seed), fastrand(&seed),
-//                                               fastrand(&seed), fastrand(&seed)));
-//                            r = tobj.reflect(r, randVec, fastrand(&seed));
-//                        }
-//                    } else {
-//                        color = r.getLuminance() * skyColor;
-//                        if (j == 0) {
-//                            sum = skyColor * samples;
-//                            goto imageWrite;
-//                        }
-//                        break;
-//                    }
-//                    lastIntersect = tobj;
-//                }
-//                sum += color;
-//            }
-//            imageWrite:
-//            i_acc[x + y * width] = sc::clamp((sum / samples), 0.0f, 255.0f);
-//        });
+        trace(cgh, rBuf, oBuf, iBuf, kBuf, sBuf, width, height, reflections, samples, skyColor, step);
     });
+    events.push_back(&tracingEvent);
+    }
+    std::cout << events.size() << std::endl;
 
     QApplication a(argc, argv);
 
 
 
-    while (tracingEvent.get_info<sc::info::event::command_execution_status>() !=
-           sc::info::event_command_status::complete) {
-//        QCoreApplication::processEvents(); // Let Qt use the time while we are rendering instead of hanging up the program.
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-            std::cout << "Rendering... " << (100.0 * (width * height - iBuf.get_access<sc::access::mode::read>().get_count()) / (width * height)) << "%" << std::endl;
-    }
+//    while (events[events.size()-1]->get_info<sc::info::event::command_execution_status>() !=
+//           sc::info::event_command_status::complete) {
+////        QCoreApplication::processEvents(); // Let Qt use the time while we are rendering instead of hanging up the program.
+//            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+////            std::cout << "Rendering... " << (100.0 * (width * height - iBuf.get_access<sc::access::mode::read>().get_count()) / (width * height)) << "%" << std::endl;
+//    }
+//    std::this_thread::sleep_for(std::chrono::milliseconds(10000));
+//    while(true){
+//        int counter = 0;
+//        bool allProcessed = true;
+//        for(const auto& event : events){
+//            if(event->get_info<sc::info::event::command_execution_status>() != sc::info::event_command_status::complete){
+//                allProcessed = false;
+//            }
+//            else
+//                counter++;
+//        }
+//
+//        if(allProcessed){
+//            break;
+//        }
+//
+//        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+//        std::cout << "Rendering... " << (100.0 * counter/events.size()) << "%" << std::endl;
+////        std::cout << "Rendering... " << (100.0 * (width * height - iBuf.get_access<sc::access::mode::read>().get_count()) / (width * height)) << "%" << std::endl;
+//    }
+    std::chrono::milliseconds ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::system_clock::now().time_since_epoch());
 
     auto imageResult = iBuf.get_access<sc::access::mode::read>();
 
@@ -194,7 +149,7 @@ int main(int argc, char *argv[]) {
 
     for (int x = 0; x < width; ++x) {
         for (int y = 0; y < height; ++y) {
-            floatImage[x + y * width] = imageResult[x + y * width];
+            floatImage[x + y * width] = imageResult[x + y * width]/samples;
         }
     }
 
@@ -204,7 +159,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
-            sc::float3 color = floatImage[i + j * width];
+            sc::float3 color = sc::clamp(floatImage[i + j * width], 0.0f, 255.0f);
             image.setPixelColor(i, j, QColor::fromRgb(abs(color.x()), abs(color.y()), abs(color.z())));
         }
     }

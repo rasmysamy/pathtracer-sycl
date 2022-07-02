@@ -7,7 +7,7 @@
 
 #include "Triangle.h"
 #include "AABB.h"
-#include "Material.h"
+//#include "Material.h"
 #include "Mesh.h"
 #include <stack>
 
@@ -135,7 +135,7 @@ struct kdTreeNode{
 //        triangles = sharedData;
 //    }
 
-    material::intersectReturn mRayIntersect(const Ray& r, Triangle* ref, material::intersectReturn lastIntersect, materialBase mat) const{
+    material::intersectReturn mRayIntersect(const Ray& r, Triangle* ref, const material::intersectReturn& lastIntersect, const materialBase& mat) const{
         float minDist = FLT_MAX;
         material::intersectReturn t = material::intersectReturn();
         for (int i = 0; i < nmPrimitives; ++i) {
@@ -199,11 +199,12 @@ public:
         bool seenFirst=false;
         bool seenSecond=false;
     };
-    material::intersectReturn mRayIntersect(const Ray &r, material::intersectReturn lastIntersect) const{
+
+    material::intersectReturn mRayIntersect(const Ray &r, const material::intersectReturn& lastIntersect) const{
         //This code is a stub for kdTree-ray intersection. It misses collision due to missing AABB collision point data
         kdTreeNode currentNode = parentNode;
-        kdTreeNode visitedList[20];
-        kdTreeMesh::visitFlag vFlags[20];
+        kdTreeNode visitedList[32];
+        kdTreeMesh::visitFlag vFlags[32];
         material::intersectReturn ret;
         int currentDepth = 0;
         if(!(currentNode.bound->bRayIntersect(r))) {
@@ -225,7 +226,7 @@ public:
                 continue;
             }
             //So, this is not a leaf. We check if there is a non-visited node.
-            if(vFlags[currentDepth].seenFirst && vFlags[currentDepth].seenSecond){
+            else if(vFlags[currentDepth].seenFirst && vFlags[currentDepth].seenSecond){
                 //Both nodes are visited. We check if we are a at depth zero. If so, there is no intersection.
                 if(currentDepth==0) {
                     return ret;
@@ -236,21 +237,21 @@ public:
                 currentNode = visitedList[currentDepth];
                 continue;
             }
-            if(!(vFlags[currentDepth].seenFirst) && currentNode.nodes[0].bound->fRayIntersect(r)!=-1
+            else if(!(vFlags[currentDepth].seenFirst) && currentNode.nodes[0].bound->fRayIntersect(r)!=-1
                 &&!(vFlags[currentDepth].seenSecond) && currentNode.nodes[1].bound->fRayIntersect(r)!=-1){
                 //In this case, the ray intersects with both. We have to investigate only the closest node.
                 if(currentNode.nodes[0].bound->fRayIntersect(r) < currentNode.nodes[1].bound->fRayIntersect(r))
                     goto checkingFirst;
                 goto checkingSecond; //To avoid using a function call and increasing stack depth, we use goto here.
             }
-            if(!(vFlags[currentDepth].seenFirst) && currentNode.nodes[0].bound->fRayIntersect(r)!=-1){//If the first node isn't seen, we switch to it
+            else if(!(vFlags[currentDepth].seenFirst) && currentNode.nodes[0].bound->fRayIntersect(r)!=-1){//If the first node isn't seen, we switch to it
                 checkingFirst:
                 vFlags[currentDepth].seenFirst=true;
                 currentNode = (currentNode.nodes[0]);
                 currentDepth++;
                 continue;
             }
-            if(!(vFlags[currentDepth].seenSecond) && currentNode.nodes[1].bound->fRayIntersect(r)!=-1){
+            else if(!(vFlags[currentDepth].seenSecond) && currentNode.nodes[1].bound->fRayIntersect(r)!=-1){
                 checkingSecond:
                 vFlags[currentDepth].seenSecond=true;
                 currentNode = (currentNode.nodes[1]);
@@ -258,7 +259,7 @@ public:
                 continue;
             }
             //No intersection at all also means we must backtrack
-            if(currentDepth==0) {
+            else if(currentDepth==0) {
                 return ret;
             }
             vFlags[currentDepth] = visitFlag(); //reset visitation flags

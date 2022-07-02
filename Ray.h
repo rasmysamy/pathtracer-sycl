@@ -7,7 +7,6 @@
 
 #include <CL/sycl.hpp>
 #include <iostream>
-#include <float.h>
 
 namespace sc = cl::sycl;
 

@@ -7,6 +7,7 @@
 
 #include "Ray.h"
 #include "Triangle.h"
+#include "cfloat"
 
 class AABB {
 public:
@@ -44,13 +45,13 @@ public:
         return maxComponent(tMin) <= minComponent(tMax);
     }
 
-    static inline bool bRayIntersect(const Ray& r, sc::float3 start, sc::float3 end){
-        sc::float3 first = (start - r.getOrigin()) * 1/r.getDirection();
-        sc::float3 second = (end - r.getOrigin()) * 1/r.getDirection();
-        sc::float3 tMin = sc::min(first, second);
-        sc::float3 tMax = sc::max(first, second);
-        return maxComponent(tMin) <= minComponent(tMax);
-    }
+//    bool bRayIntersect(const Ray& r, sc::float3 start, sc::float3 end){
+//        sc::float3 first = (start - r.getOrigin()) * 1/r.getDirection();
+//        sc::float3 second = (end - r.getOrigin()) * 1/r.getDirection();
+//        sc::float3 tMin = sc::min(first, second);
+//        sc::float3 tMax = sc::max(first, second);
+//        return maxComponent(tMin) <= minComponent(tMax);
+//    }
 
     float fRayIntersect(const Ray& r) const{
         sc::float3 first = (bounds[0] - r.getOrigin()) * 1/r.getDirection();

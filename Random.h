@@ -1,7 +1,7 @@
 //
 // Created by sysgen on 3/20/21.
 //
-
+#pragma once
 #ifndef PATHTRACER_SYCL_RANDOM_H
 #define PATHTRACER_SYCL_RANDOM_H
 
@@ -35,15 +35,15 @@ inline sc::float4 BoxMueller(sc::float4 uniformRandomUnit){
                          sc::sqrt(-2*sc::log(c))*sc::sin(2*PI*d)});
 }
 
-inline sc::float3 BoxMueller3(sc::float4 uniformRandomUnit){
-    float a = uniformRandomUnit.x();
-    float b = uniformRandomUnit.y();
-    float c = uniformRandomUnit.z();
-    float d = uniformRandomUnit.w();
-    return sc::float3({sc::sqrt(-2*sc::log(a))*sc::cos(2*PI*b),
-                         sc::sqrt(-2*sc::log(a))*sc::sin(2*PI*b),
-                         sc::sqrt(-2*sc::log(c))*sc::cos(2*PI*d)});
-}
+//inline sc::float3 BoxMueller3(sc::float4 uniformRandomUnit){
+//    float a = uniformRandomUnit.x();
+//    float b = uniformRandomUnit.y();
+//    float c = uniformRandomUnit.z();
+//    float d = uniformRandomUnit.w();
+//    return sc::float3({sc::sqrt(-2*sc::log(a))*sc::cos(2*PI*b),
+//                         sc::sqrt(-2*sc::log(a))*sc::sin(2*PI*b),
+//                         sc::sqrt(-2*sc::log(c))*sc::cos(2*PI*d)});
+//}
 
 
 #endif //PATHTRACER_SYCL_RANDOM_H

@@ -1,6 +1,7 @@
 //
 // Created by sysgen on 3/24/21.
 //
+#pragma once
 
 #ifndef PATHTRACER_SYCL_TRIANGLE_H
 #define PATHTRACER_SYCL_TRIANGLE_H
@@ -31,7 +32,7 @@ public:
         return bary.x()*v0 + bary.y()*v1 + bary.z()*v2;
     }
 
-    sc::float3 cartesian2Barycentric(const sc::float3 cart){
+    sc::float3 cartesian2Barycentric(const sc::float3& cart){
         return {0,0,0};
     }
 
@@ -39,7 +40,7 @@ public:
         return v0n;
     }
 
-    material::intersectReturn rayIntersect(const Ray& r, int material, sc::float3 attr_1, float attr_2) const {
+    material::intersectReturn rayIntersect(const Ray& r, int material, const sc::float3& attr_1, float attr_2) const {
         float t, u, v;
         // We will use the Moller-Trumbore algorithm for ray intersection
         // We thus use cramer's rule to solve for t, u, v in the following vector equation:

@@ -10,7 +10,7 @@
 #include "Material.h"
 #include "Random.h"
 
-#define NORMAL_RECTIFICATION_COEFFICIENT 0.005f
+#define NORMAL_RECTIFICATION_COEFFICIENT 0.00005f
 
 namespace material {
     enum MATERIALS {
