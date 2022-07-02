@@ -2,7 +2,7 @@
 <project version="4">
   <component name="CMakeSharedSettings">
     <configurations>
-      <configuration PROFILE_NAME="Debug-SYCL" ENABLED="true" CONFIG_NAME="Debug" TOOLCHAIN_NAME="SYCL" GENERATION_OPTIONS="-G Ninja -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/clang++" BUILD_OPTIONS="-j 8" />
+      <configuration PROFILE_NAME="Debug-SYCL" ENABLED="true" CONFIG_NAME="Debug" TOOLCHAIN_NAME="SYCL" GENERATION_OPTIONS="-G Ninja -DCMAKE_CXX_COMPILER=/usr/bin/clang++" BUILD_OPTIONS="-j 8" />
     </configurations>
   </component>
 </project>

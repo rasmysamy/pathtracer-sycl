@@ -31,8 +31,6 @@ QT_END_NAMESPACE
 
 namespace sc = cl::sycl;
 
-class pathtracing;
-
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -41,7 +39,7 @@ public:
     sc::queue q;
     sc::device d;
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    virtual ~MainWindow() { };
     void populateObjects(){
         spheres.clear();
         meshes.clear();

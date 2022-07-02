@@ -67,10 +67,11 @@
 cmake_minimum_required(VERSION 3.17)
 project(pathtracer-sycl)
 
-set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++")
+#set(CMAKE_CXX_COMPILER "/opt/rocm/llvm/bin/clang++")
+#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
 
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_AUTOMOC ON)
+#set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 
@@ -80,12 +81,15 @@ set(QT_VERSION 5)
 set(REQUIRED_LIBS Core Gui Widgets)
 set(REQUIRED_LIBS_QUALIFIED Qt5::Core Qt5::Gui Qt5::Widgets)
 
-add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h mainwindow.cpp)
+#add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h mainwindow.cpp)
+add_executable(${PROJECT_NAME} main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h AABB.cpp AABB.h kdTreeMesh.h)
+
 
 set(HIPSYCL_TARGETS cuda:sm_86)
-#set(HIPSYCL_TARGETS omp)
+#set(HIPSYCL_USE_ACCELERATED_CPU ON)
+#set(HIPSYCL_TARGETS omp.accelerated)
 find_package(hipSYCL REQUIRED)
-add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES main.cpp Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h Mesh.h mainwindow.cpp mainwindow.h)
+add_sycl_to_target(TARGET ${PROJECT_NAME} SOURCES Ray.cpp Ray.h Sphere.cpp Sphere.h Camera.cpp Camera.h Material.cpp Material.h Random.h Diffuse.cpp Diffuse.h Emissive.cpp Emissive.h Trace.h Random.cpp Triangle.cpp Triangle.h Mesh.h)
 
 if (NOT CMAKE_PREFIX_PATH)
     message(WARNING "CMAKE_PREFIX_PATH is not defined, you may need to set it "

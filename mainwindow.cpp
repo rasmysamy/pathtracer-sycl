@@ -1,15 +1,18 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "Trace.h"
 
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow(parent), ui(new Ui::MainWindow) {
+//    auto ui = this;
     ui->setupUi(this);
     ui->tableWidget->setColumnCount(1);
     ui->tableWidget->setHorizontalHeaderLabels(
             QStringList() << "Object description");
     setCentralWidget(ui->horizontalWidget);
 
-    sc::device device{sc::gpu_selector()};
+//    sc::device device{sc::gpu_selector()};
+    sc::device device{sc::cpu_selector()};
 //    sc::device device = sc::host_selector{}.select_device();
     sc::queue queue(device, [](const sc::exception_list &el) {
         for (const auto &e : el) {
@@ -33,9 +36,9 @@ void MainWindow::setColorLabelsInitial(){
     ui->skyColorLabel->setPalette(q);
 }
 
-MainWindow::~MainWindow() {
-    delete ui;
-}
+//MainWindow::~MainWindow() {
+//    delete ui;
+//}
 
 auto removeByIndex =
         []<class T>(std::vector<T> &vec, unsigned int index) {
@@ -388,87 +391,88 @@ void MainWindow::render() {
     sc::float3 skyColor(colorR, colorG, colorB);
 
     sc::event tracingEvent = q.submit([&](sc::handler &cgh) {
-        auto r_acc = rBuf.get_access<sc::access::mode::read>(cgh);
-        auto o_acc = oBuf.get_access<sc::access::mode::read>(cgh);
-        auto i_acc = iBuf.get_access<sc::access::mode::write>(cgh);
-        auto k_acc = kBuf.get_access<sc::access::mode::read>(cgh);
-        cgh.parallel_for<pathtracing>(sc::range<2>(width, height), [=](sc::id<2> idx) {
-            int x = idx[0];
-            int y = idx[1];
-            Ray initialRay = r_acc[x + y * width];
-            Ray r;
-            bool intersect;
-            int seed = (x * y * reflections * samples);
-            fastrand(&seed);
-            fastrand(&seed);
-            sc::float3 sum = {0, 0, 0};
-            //We initialize values necessary for the path tracing code.
-            for (int i = 0; i < samples; i++) {
-                sc::float3 color = {0, 0, 0};
-                r = initialRay;
-
-                material::intersectReturn tobj;
-
-                material::intersectReturn lastIntersect = material::intersectReturn();
-                for (int j = 0; j < reflections; j++) {
-                    intersect = false;
-                    float minDist = FLT_MAX;
-                    for (int k = 0; k < o_acc.get_count(); k++) {
-                        material::intersectReturn ret = o_acc[k].mRayIntersect(r, k);
-                        if (ret == lastIntersect)
-                            continue;
-                        if (ret.intersect
-                            && ret.intersectDistance < minDist) {
-                            intersect = true;
-                            minDist = ret.intersectDistance;
-                            tobj = ret;
-                        }
-                    }
-                    for (int k = 0; k < k_acc.get_count(); ++k) {
-                        material::intersectReturn t_intersect = k_acc[k].mRayIntersect(r, lastIntersect);
-                        if (t_intersect.intersect
-                            && t_intersect.intersectDistance < minDist) {
-                            intersect = true;
-//                            hitMesh = true;
-                            minDist = t_intersect.intersectDistance;
-                            tobj = t_intersect;
-                        }
-                    }
-
-                    if (intersect) {
-                        if (tobj.isEmissive()) {
-                            color = tobj.getPixelEmissive(r);
-                            if (j == 0) {
-                                sum = tobj.getPixelEmissive(r) * samples;
-                                goto imageWrite;
-                            }
-                            break;
-                        } else {
-                            sc::float4 randVec = sc::normalize(
-                                    sc::float4(fastrand(&seed), fastrand(&seed),
-                                               fastrand(&seed), fastrand(&seed)));
-                            r = tobj.reflect(r, randVec, fastrand(&seed));
-                        }
-                    } else {
-                        color = r.getLuminance() * skyColor;
-                        if (j == 0) {
-                            sum = skyColor * samples;
-                            goto imageWrite;
-                        }
-                        break;
-                    }
-                    lastIntersect = tobj;
-                }
-                sum += color;
-            }
-            imageWrite:
-            i_acc[x + y * width] = sc::clamp((sum / samples), 0.0f, 255.0f);
-        });
+        trace(cgh, rBuf, oBuf, iBuf, kBuf, width, height, reflections, samples, skyColor);
+//        auto r_acc = rBuf.get_access<sc::access::mode::read>(cgh);
+//        auto o_acc = oBuf.get_access<sc::access::mode::read>(cgh);
+//        auto i_acc = iBuf.get_access<sc::access::mode::write>(cgh);
+//        auto k_acc = kBuf.get_access<sc::access::mode::read>(cgh);
+//        cgh.parallel_for<pathtracing>(sc::range<2>(width, height), [=](sc::id<2> idx) {
+//            int x = idx[0];
+//            int y = idx[1];
+//            Ray initialRay = r_acc[x + y * width];
+//            Ray r;
+//            bool intersect;
+//            int seed = (x * y * reflections * samples);
+//            fastrand(&seed);
+//            fastrand(&seed);
+//            sc::float3 sum = {0, 0, 0};
+//            //We initialize values necessary for the path tracing code.
+//            for (int i = 0; i < samples; i++) {
+//                sc::float3 color = {0, 0, 0};
+//                r = initialRay;
+//
+//                material::intersectReturn tobj;
+//
+//                material::intersectReturn lastIntersect = material::intersectReturn();
+//                for (int j = 0; j < reflections; j++) {
+//                    intersect = false;
+//                    float minDist = FLT_MAX;
+//                    for (int k = 0; k < o_acc.get_count(); k++) {
+//                        material::intersectReturn ret = o_acc[k].mRayIntersect(r, k);
+//                        if (ret == lastIntersect)
+//                            continue;
+//                        if (ret.intersect
+//                            && ret.intersectDistance < minDist) {
+//                            intersect = true;
+//                            minDist = ret.intersectDistance;
+//                            tobj = ret;
+//                        }
+//                    }
+//                    for (int k = 0; k < k_acc.get_count(); ++k) {
+//                        material::intersectReturn t_intersect = k_acc[k].mRayIntersect(r, lastIntersect);
+//                        if (t_intersect.intersect
+//                            && t_intersect.intersectDistance < minDist) {
+//                            intersect = true;
+////                            hitMesh = true;
+//                            minDist = t_intersect.intersectDistance;
+//                            tobj = t_intersect;
+//                        }
+//                    }
+//
+//                    if (intersect) {
+//                        if (tobj.isEmissive()) {
+//                            color = tobj.getPixelEmissive(r);
+//                            if (j == 0) {
+//                                sum = tobj.getPixelEmissive(r) * samples;
+//                                goto imageWrite;
+//                            }
+//                            break;
+//                        } else {
+//                            sc::float4 randVec = sc::normalize(
+//                                    sc::float4(fastrand(&seed), fastrand(&seed),
+//                                               fastrand(&seed), fastrand(&seed)));
+//                            r = tobj.reflect(r, randVec, fastrand(&seed));
+//                        }
+//                    } else {
+//                        color = r.getLuminance() * skyColor;
+//                        if (j == 0) {
+//                            sum = skyColor * samples;
+//                            goto imageWrite;
+//                        }
+//                        break;
+//                    }
+//                    lastIntersect = tobj;
+//                }
+//                sum += color;
+//            }
+//            imageWrite:
+//            i_acc[x + y * width] = sc::clamp((sum / samples), 0.0f, 255.0f);
+//        });
     });
 
 
-    while (!(tracingEvent.get_info<sc::info::event::command_execution_status>() ==
-             sc::info::event_command_status::complete)) {
+    while (tracingEvent.get_info<sc::info::event::command_execution_status>() !=
+           sc::info::event_command_status::complete) {
         QCoreApplication::processEvents(); // Let Qt use the time while we are rendering instead of hanging up the program.
     }
 
