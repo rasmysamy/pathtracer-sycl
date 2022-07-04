@@ -58,6 +58,21 @@ inline bool vectorEquals(sc::float3 a, sc::float3 b){
     return a[0]==a[0] && a[1]==b[1] && a[2]==b[2];
 }
 
+inline void moveResize(std::vector<Triangle> &tVec, AABB &bounds, sc::float3 move, sc::float3 resize){
+    for(Triangle &t : tVec){
+        t.v0 += move;
+        t.v1 += move;
+        t.v2 += move;
+        t.v0 *= resize;
+        t.v1 *= resize;
+        t.v2 *= resize;
+    }
+    bounds.bounds[0] += move;
+    bounds.bounds[1] += move;
+    bounds.bounds[0] *= resize;
+    bounds.bounds[1] *= resize;
+}
+
 inline std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
     auto triangleVec = std::vector<Triangle>();
     tinyobj::ObjReaderConfig reader_config;

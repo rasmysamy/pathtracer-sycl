@@ -225,10 +225,15 @@ public:
                 currentNode = visitedList[currentDepth];
                 continue;
             }
-//            if (!currentNode.bound->bRayIntersect(r))
-//                goto backtrack;
+            float f;
+            float s;
+            if (!currentNode.bound->bRayIntersect(r))
+                goto backtrack;
+
+            f = currentNode.nodes[0].bound->fRayIntersect(r);
+            s = currentNode.nodes[1].bound->fRayIntersect(r);
             //So, this is not a leaf. We check if there is a non-visited node.
-            else if(vFlags[currentDepth].seenFirst && vFlags[currentDepth].seenSecond){
+            if(vFlags[currentDepth].seenFirst && vFlags[currentDepth].seenSecond){
                 //Both nodes are visited. We check if we are a at depth zero. If so, there is no intersection.
                 if(currentDepth==0) {
                     return ret;
@@ -239,21 +244,21 @@ public:
                 currentNode = visitedList[currentDepth];
                 continue;
             }
-            else if(!(vFlags[currentDepth].seenFirst) && currentNode.nodes[0].bound->fRayIntersect(r)!=-1
-                &&!(vFlags[currentDepth].seenSecond) && currentNode.nodes[1].bound->fRayIntersect(r)!=-1){
+            else if(!(vFlags[currentDepth].seenFirst) && f!=-1
+                &&!(vFlags[currentDepth].seenSecond) && s!=-1){
                 //In this case, the ray intersects with both. We have to investigate only the closest node.
-                if(currentNode.nodes[0].bound->fRayIntersect(r) < currentNode.nodes[1].bound->fRayIntersect(r))
+                if(f < s)
                     goto checkingFirst;
                 goto checkingSecond; //To avoid using a function call and increasing stack depth, we use goto here.
             }
-            else if(!(vFlags[currentDepth].seenFirst) && currentNode.nodes[0].bound->fRayIntersect(r)!=-1){//If the first node isn't seen, we switch to it
+            else if(!(vFlags[currentDepth].seenFirst) && f!=-1){//If the first node isn't seen, we switch to it
                 checkingFirst:
                 vFlags[currentDepth].seenFirst=true;
                 currentNode = (currentNode.nodes[0]);
                 currentDepth++;
                 continue;
             }
-            else if(!(vFlags[currentDepth].seenSecond) && currentNode.nodes[1].bound->fRayIntersect(r)!=-1){
+            else if(!(vFlags[currentDepth].seenSecond) && s!=-1){
                 checkingSecond:
                 vFlags[currentDepth].seenSecond=true;
                 currentNode = (currentNode.nodes[1]);
@@ -265,7 +270,8 @@ public:
                 return ret;
             }
             backtrack:
-            vFlags[currentDepth] = visitFlag(); //reset visitation flags
+            vFlags[currentDepth].seenFirst = false; //reset visitation flags
+            vFlags[currentDepth].seenSecond = false;
             --currentDepth; //backtrack to previous level
             currentNode = visitedList[currentDepth];
         }

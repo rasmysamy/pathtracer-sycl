@@ -41,10 +41,12 @@ void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oB
                 fastrand(&seed);
                 fastrand(&seed);
             }
-//            initialRay = cam.getRay(x+(fastrand(&seed)/32768), y+(fastrand(&seed)/32768));
+            initialRay = cam.getRay(x+((fastrand(&seed)%32768)/32768), y+((fastrand(&seed)%32768)/32768));
             sc::float3 sum = {0, 0, 0};
             //We initialize values necessary for the path tracing code.
             for (int i = 0; i < step; i++) {
+                initialRay = cam.getRay(x+((fastrand(&seed)%32768)/32768), y+((fastrand(&seed)%32768)/32768));
+
                 sc::float3 color = {0, 0, 0};
                 r = initialRay;
 

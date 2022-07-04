@@ -13,10 +13,10 @@ int main(int argc, char* argv[]) {
 //    int height = ui->resY->value();
 //    int reflections = 8;
 //    int samples = ui->spp->value();
-    int width = 720;
-    int height = 480;
+    int width = 1920;
+    int height = 1080;
     int reflections = 6;
-    int samples = 200;
+    int samples = 2000;
 
 
 //    sc::device device{sc::cpu_selector()};

@@ -96,7 +96,7 @@ namespace material {
             }
             float k = 1 - iorRatio * iorRatio * (1 - cosIncidentAngle * cosIncidentAngle);
             float r = calcFresnelReflectance(incident, cosIncidentAngle, incidentRayIndex, mediaIndex);
-            if(k<0 || (r*32768)>rand) {
+            if(k<0 || (rand%32768) < (r*32768)) {
                 return mirrorReflect(incident, n);
             }
             sc::float3 refractDirection = iorRatio * incident.getDirection() + (iorRatio * cosIncidentAngle - sc::sqrt(k)) * n;
