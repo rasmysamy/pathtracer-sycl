@@ -63,6 +63,13 @@ namespace material {
             Ray rRay = Ray(hitpoint+(normal*NORMAL_RECTIFICATION_COEFFICIENT), reflect, incident.getLuminance());
             return rRay;
         }
+        Ray mirrorReflect(const Ray& incident, sc::float3 n) const{
+            float normalL = sc::dot(-incident.getDirection(), n);
+            sc::float3 normalProj = n * normalL;
+            sc::float3 reflect = sc::normalize((incident.getDirection()) + 2*normalProj);
+            Ray rRay = Ray(hitpoint+(n*NORMAL_RECTIFICATION_COEFFICIENT), reflect, incident.getLuminance());
+            return rRay;
+        }
         float calcFresnelReflectance(const Ray& incident, float cosIncident, float incidentRayIndex,
                                             float mediaIndex) const{ //We apply Fresnel's equations to get mean unpolarized reflectance
             // We use Snell's law to find the sine of the exit angle
@@ -79,17 +86,18 @@ namespace material {
             float cosIncidentAngle = sc::clamp(sc::dot(incident.getDirection(), normal), -1.0f, 1.0f);
             float incidentRayIndex = 1, mediaIndex = attr_2;
             float iorRatio = incidentRayIndex / mediaIndex;
-            float k = 1 - iorRatio * iorRatio * (1 - cosIncidentAngle * cosIncidentAngle);
             if (cosIncidentAngle < 0) {
                 cosIncidentAngle = -cosIncidentAngle;
             } else {
                 std::swap(incidentRayIndex, mediaIndex);
+                iorRatio = incidentRayIndex / mediaIndex;
                 n = -normal;
                 hitPointRectified = hitpoint + -n*NORMAL_RECTIFICATION_COEFFICIENT;
             }
+            float k = 1 - iorRatio * iorRatio * (1 - cosIncidentAngle * cosIncidentAngle);
             float r = calcFresnelReflectance(incident, cosIncidentAngle, incidentRayIndex, mediaIndex);
             if(k<0 || (r*32768)>rand) {
-                return mirrorReflect(incident);
+                return mirrorReflect(incident, n);
             }
             sc::float3 refractDirection = iorRatio * incident.getDirection() + (iorRatio * cosIncidentAngle - sc::sqrt(k)) * n;
             return Ray(hitPointRectified, refractDirection, attr_1*incident.getLuminance() * (1-r));

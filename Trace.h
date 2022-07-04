@@ -5,6 +5,7 @@
 #ifndef PATHTRACER_SYCL_TRACE_H
 #define PATHTRACER_SYCL_TRACE_H
 //
+#define HIPSYCL_EXT_FP_ATOMICS
 #include <CL/sycl.hpp>
 #include "Ray.h"
 #include "Sphere.h"
@@ -14,24 +15,33 @@ namespace sc = cl::sycl;
 
 class pathtracing;
 
-void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oBuf, sc::buffer<sc::float3, 1> &iBuf,
+void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oBuf, sc::buffer<int, 1> &iBuf,
            sc::buffer<kdTreeMesh, 1> &kBuf, sc::buffer<int, 1> &sBuf, int width, int height,
-           int reflections, int samples, sc::float3 skyColor, int step){
+           int reflections, int samples, sc::float3 skyColor, int step, Camera &cam){
 
     auto r_acc = rBuf.get_access<sc::access::mode::read>(cgh);
     auto o_acc = oBuf.get_access<sc::access::mode::read>(cgh);
-    auto i_acc = iBuf.get_access<sc::access::mode::write>(cgh);
+    auto i_acc = iBuf.get_access<sc::access::mode::read_write>(cgh);
     auto k_acc = kBuf.get_access<sc::access::mode::read>(cgh);
     auto s_acc = sBuf.get_access<sc::access::mode::read_write>(cgh);
-        cgh.parallel_for<pathtracing>(sc::range<2>(width, height), [=](sc::id<2> idx) {
+        cgh.parallel_for<pathtracing>(sc::range<3>(width, height, samples/step), [=](sc::id<3> idx) {
             int x = idx[0];
             int y = idx[1];
             Ray initialRay = r_acc[x + y * width];
             Ray r;
             bool intersect;
-            int seed = s_acc[x + y * width];
+            int seed = s_acc[(x + y * width+idx[2]*24398) % (width * height)];
+//            seed *= idx[2];
             fastrand(&seed);
             fastrand(&seed);
+            for(int i = 0; i < idx[2]; i++){
+                fastrand(&seed);
+                fastrand(&seed);
+                fastrand(&seed);
+                fastrand(&seed);
+                fastrand(&seed);
+            }
+//            initialRay = cam.getRay(x+(fastrand(&seed)/32768), y+(fastrand(&seed)/32768));
             sc::float3 sum = {0, 0, 0};
             //We initialize values necessary for the path tracing code.
             for (int i = 0; i < step; i++) {
@@ -70,7 +80,7 @@ void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oB
                         if (tobj.isEmissive()) {
                             color = tobj.getPixelEmissive(r);
                             if (j == 0) {
-                                sum = tobj.getPixelEmissive(r) * samples;
+                                sum = tobj.getPixelEmissive(r) * step;
                                 goto imageWrite;
                             }
                             break;
@@ -98,8 +108,19 @@ void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oB
             imageWrite:
 //            auto prev = i_acc[x + y * width];
 //            prev = {0,0,0};
-            i_acc[x + y * width] += sum;
-            s_acc[x + y * width] = seed;
+            sc::atomic<int> prev {sc::global_ptr<int>(&i_acc[(x + y * width) * 3])};
+            prev.fetch_add(sum.x());
+            prev = {sc::global_ptr<int>(&i_acc[(x + y * width) * 3 + 1])};
+            prev.fetch_add(sum.y());
+            prev = {sc::global_ptr<int>(&i_acc[(x + y * width) * 3 + 2])};
+            prev.fetch_add(sum.z());
+
+//            sc::atomic<int> aseed {sc::global_ptr<int>(&s_acc[x + y * width])};
+//            aseed.store(seed);
+
+//            sc::atomic_fetch_add(&i_acc[x + y * width], sum);
+//            i_acc[x + y * width] += sum.z();
+//            s_acc[x + y * width] = seed;
         });
 
 }

@@ -8,19 +8,20 @@
 
 using material::MATERIALS;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 //    int width = ui->resX->value();
 //    int height = ui->resY->value();
 //    int reflections = 8;
 //    int samples = ui->spp->value();
-    int width = 1920;
-    int height = 1080;
+    int width = 720;
+    int height = 480;
     int reflections = 6;
-    int samples = 5000;
+    int samples = 200;
 
 
 //    sc::device device{sc::cpu_selector()};
     sc::device device{sc::gpu_selector()};
+//    sc::device device{sc::host_selector()};
 //    sc::device device = sc::host_selector{}.select_device();
     sc::queue q(device, [](const sc::exception_list &el) {
         for (const auto &e : el) {
@@ -64,7 +65,7 @@ int main(int argc, char *argv[]) {
 //    mat = materialBase({.8, .8, .8}, .0, MATERIALS::Diffuse);
 //    tris = readMesh(bounds, "plane.obj");
 //    kVec.emplace_back(kdTreeMesh(tris, bounds, 5, 20, q, mat));
-    auto floatImage = new sc::float3[width * height];
+    auto floatImage = new int[width * height * 3];
 
 
     std::vector<Sphere> objects = std::vector<Sphere>();
@@ -87,7 +88,7 @@ int main(int argc, char *argv[]) {
 
     sc::buffer<Ray, 1> rBuf(rays, sc::range<1>(width * height));
     sc::buffer<Sphere, 1> oBuf(objects.data(), sc::range<1>(objects.size()));
-    sc::buffer<sc::float3, 1> iBuf(floatImage, sc::range<1>(width * height));
+    sc::buffer<int, 1> iBuf(floatImage, sc::range<1>(width * height * 3));
     sc::buffer<kdTreeMesh, 1> kBuf(kVec.data(), sc::range<1>(kVec.size()));
     sc::buffer<int, 1> sBuf(seeds, sc::range<1>(width * height));
 
@@ -99,13 +100,13 @@ int main(int argc, char *argv[]) {
 
     std::cout << q.get_device().get_info<sc::info::device::name>() << std::endl;
     std::vector<sc::event*> events;
-    int step = 10;
-    for(int i = 0; i < samples; i+=step){
+    int step = 5;
+//    for(int i = 0; i < samples; i+=step){
     sc::event tracingEvent = q.submit([&](sc::handler &cgh) {
-        trace(cgh, rBuf, oBuf, iBuf, kBuf, sBuf, width, height, reflections, samples, skyColor, step);
+        trace(cgh, rBuf, oBuf, iBuf, kBuf, sBuf, width, height, reflections, samples, skyColor, step, camera);
     });
-    events.push_back(&tracingEvent);
-    }
+//    events.push_back(&tracingEvent);
+//    }
     std::cout << events.size() << std::endl;
 
     QApplication a(argc, argv);
@@ -147,19 +148,20 @@ int main(int argc, char *argv[]) {
          ms;
     std::cout << "GPU Time : " << ms.count() << " milliseconds " << std::endl;
 
-    for (int x = 0; x < width; ++x) {
-        for (int y = 0; y < height; ++y) {
-            floatImage[x + y * width] = imageResult[x + y * width]/samples;
-        }
-    }
+//    for (int x = 0; x < width; ++x) {
+//        for (int y = 0; y < height; ++y) {
+//            floatImage[x + y * width] = imageResult[x + y * width]/samples;
+//        }
+//    }
 
-    sc::float3 center = floatImage[(width / 2) + ((height / 2) * width)];
-
-    std::cout << center.x() << " " << center.y() << " " << center.z() << std::endl;
+//    sc::float3 center = floatImage[(width / 2) + ((height / 2) * width)];
+//
+//    std::cout << center.x() << " " << center.y() << " " << center.z() << std::endl;
 
     for (int i = 0; i < width; i++) {
         for (int j = 0; j < height; j++) {
-            sc::float3 color = sc::clamp(floatImage[i + j * width], 0.0f, 255.0f);
+            sc::float3 c = {floatImage[(i + j * width)*3], floatImage[(i + j * width)*3 + 1], floatImage[(i + j * width)*3 + 2]};
+            sc::float3 color = sc::clamp(c/samples, 0.0f, 255.0f);
             image.setPixelColor(i, j, QColor::fromRgb(abs(color.x()), abs(color.y()), abs(color.z())));
         }
     }
@@ -194,5 +196,5 @@ int main(int argc, char *argv[]) {
 //    w.setColorLabelsInitial();
 //
     return QApplication::exec();
-    return 0;
+//    return 0;
 }

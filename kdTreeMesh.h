@@ -195,7 +195,7 @@ public:
             lNodes = newLNodes;
         }
     }
-    struct visitFlag{
+    struct __attribute__((packed)) visitFlag{
         bool seenFirst=false;
         bool seenSecond=false;
     };
@@ -214,7 +214,7 @@ public:
             return parentNode.mRayIntersect(r, parentNode.triangles, lastIntersect, m);
         }
         while(true){
-            visitedList[currentDepth] = kdTreeNode(currentNode);
+            visitedList[currentDepth] = currentNode;
             if(currentNode.isLeaf){
                 auto t = currentNode.mRayIntersect(r, parentNode.triangles, lastIntersect, m);
                 if(t.intersect) {
@@ -225,6 +225,8 @@ public:
                 currentNode = visitedList[currentDepth];
                 continue;
             }
+//            if (!currentNode.bound->bRayIntersect(r))
+//                goto backtrack;
             //So, this is not a leaf. We check if there is a non-visited node.
             else if(vFlags[currentDepth].seenFirst && vFlags[currentDepth].seenSecond){
                 //Both nodes are visited. We check if we are a at depth zero. If so, there is no intersection.
@@ -262,6 +264,7 @@ public:
             else if(currentDepth==0) {
                 return ret;
             }
+            backtrack:
             vFlags[currentDepth] = visitFlag(); //reset visitation flags
             --currentDepth; //backtrack to previous level
             currentNode = visitedList[currentDepth];

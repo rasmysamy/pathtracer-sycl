@@ -5,8 +5,8 @@
 #include "Camera.h"
 
 Ray Camera::getRay(int x, int y) const {
-    sc::float3 horizontalComp = (horizontalVector*(x-(X/2.0))*virtualRecScale);
-    sc::float3 verticalComp = (upVector*(y-(Y/2.0))*virtualRecScale);
+    sc::float3 horizontalComp = (horizontalVector*(x-(X/2.0f))*virtualRecScale);
+    sc::float3 verticalComp = (upVector*(y-(Y/2.0f))*virtualRecScale);
     sc::float3 forwardComp = principalRay.getDirection()*virtualRecDistance;
     return Ray(principalRay.getOrigin(),
                sc::normalize(horizontalComp+verticalComp+forwardComp));

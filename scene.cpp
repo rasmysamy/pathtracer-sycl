@@ -9,7 +9,7 @@ void scene::makeScene(std::vector<kdTreeMesh> &kVec, std::vector<Sphere> &sVec, 
     AABB bounds = AABB();
     auto tris = readMesh(bounds, "dragon-low.obj");
     materialBase mat = materialBase({1.2, .5, .5}, 1.4, MATERIALS::Glass); // Not physically correct but it looks cool
-    kVec.emplace_back(kdTreeMesh(tris, bounds, 13, 5, q, mat));
+    kVec.emplace_back(kdTreeMesh(tris, bounds, 30, 40, q, mat));
     mat = materialBase({.6, .6, .6}, .0, MATERIALS::Diffuse);
     tris = readMesh(bounds, "plane.obj");
     kVec.emplace_back(kdTreeMesh(tris, bounds, 1, 20, q, mat));
