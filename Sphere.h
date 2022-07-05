@@ -99,9 +99,22 @@ public:
         float delta = B*B-(4*A*C);
         float deltaSqrt = sc::sqrt(delta);
         float numerator = -B-deltaSqrt;
-        return delta > 0 ? (numerator > 0 ? numerator/(2*A) : (numerator+2*deltaSqrt)/(2*A)) : -1;
+        if (delta < 0)
+            return -1;
+        float t1 = numerator/(2*A);
+        float t2 = (numerator + 2*deltaSqrt)/(2*A);
+        if (t1 < 0 && t2 < 0)
+            return -1;
+        if (t1 < 0)
+            return t2;
+        else if (t2 < 0)
+            return t1;
+        else
+            return t1 < t2 ? t1 : t2;
+
+//        return delta > 0 ? (numerator > 0 ? numerator/(2*A) : (numerator+2*deltaSqrt)/(2*A)) : -1;
     }
-//    float intersect(const Ray& r) const{
+//    float fRayIntersect(const Ray& r) const{
 //        sc::float3 L = center - r.getOrigin();
 //        float tca = sc::dot(L, r.getDirection());
 //        // if (tca < 0) return false;

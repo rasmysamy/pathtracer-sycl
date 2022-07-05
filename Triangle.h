@@ -32,7 +32,7 @@ public:
         return bary.x()*v0 + bary.y()*v1 + bary.z()*v2;
     }
 
-    sc::float3 cartesian2Barycentric(const sc::float3& cart){
+    sc::float3 cartesian2Barycentric(const sc::float3& cart) const{
         return {0,0,0};
     }
 
@@ -87,7 +87,7 @@ public:
             return ret;
 //
         sc::float3 point = r.getOrigin() + t*r.getDirection();
-        sc::float3 norm = getFlatNormal();
+        sc::float3 norm = isFlat ? getFlatNormal() : getSmoothNormal(point);
 
         //norm = normal; Flat shading, triangle normals
         //norm = vn0*t + vn1*u + vn2*v;
@@ -108,6 +108,14 @@ public:
 
     sc::float3 getNormal() const{
         return sc::cross(v0-v1, v2-v1);
+    }
+
+    sc::float3 getSmoothNormal(sc::float3 point) const{
+        float d1 = sc::fast_length(v0-point);
+        float d2 = sc::fast_length(v1-point);
+        float d3 = sc::fast_length(v2-point);
+        float total = d1+d2+d3;
+        return (v0n*d1 + v1n*d2 + v2n*d3)/total;
     }
 
 //    sc::float3 getPixelEmissive(const Ray& incident) const {return material::getPixelColor(incident, attr_1);}

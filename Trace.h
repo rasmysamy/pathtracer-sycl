@@ -45,7 +45,7 @@ void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oB
             sc::float3 sum = {0, 0, 0};
             //We initialize values necessary for the path tracing code.
             for (int i = 0; i < step; i++) {
-                initialRay = cam.getRay(x+((fastrand(&seed)%32768)/32768), y+((fastrand(&seed)%32768)/32768));
+                initialRay = cam.getRay(x+ fastfrand(&seed), y+fastfrand(&seed));
 
                 sc::float3 color = {0, 0, 0};
                 r = initialRay;
@@ -87,10 +87,11 @@ void trace(sc::handler &cgh, sc::buffer<Ray, 1> &rBuf, sc::buffer<Sphere, 1> &oB
                             }
                             break;
                         } else {
-                            sc::float4 randVec = sc::normalize(
-                                    sc::float4(fastrand(&seed), fastrand(&seed),
-                                               fastrand(&seed), fastrand(&seed)));
-                            r = tobj.reflect(r, randVec, fastrand(&seed));
+//                            sc::float4 randVec = (
+//                                    sc::float4(fastfrand(&seed), fastfrand(&seed),
+//                                               fastfrand(&seed), fastfrand(&seed)));
+                            sc::float3 rVec = randVec(fastfrand(&seed), fastfrand(&seed));
+                            r = tobj.reflect(r, rVec, fastrand(&seed));
                         }
                     } else {
                         color = r.getLuminance() * skyColor;

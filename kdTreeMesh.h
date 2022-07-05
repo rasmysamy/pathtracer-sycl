@@ -30,11 +30,32 @@ struct materialBase{
 struct kdTreeNode{
     kdTreeNode()=default;
 
-    kdTreeNode *nodes; //This is technically an array.
+    kdTreeNode *nodes;
     AABB *bound;
     bool isLeaf;
     Triangle *triangles; //Last two only for leaves
     int nmPrimitives = 0;
+
+    void to_device(sc::queue q){
+        if (isLeaf){
+            auto* nt = sc::malloc_device<Triangle>(nmPrimitives, q);
+            q.memcpy(nt, triangles, nmPrimitives*sizeof(Triangle));
+            sc::free(triangles, q);
+            triangles = nt;
+        }
+        else{
+            nodes[0].to_device(q);
+            nodes[1].to_device(q);
+            auto* nn = sc::malloc_device<kdTreeNode>(2, q);
+            q.memcpy(nn, nodes, 2*sizeof(kdTreeNode));
+            sc::free(nodes, q);
+            nodes = nn;
+        }
+        AABB *b = sc::malloc_device<AABB>(1, q);
+        q.memcpy(b, bound, sizeof(AABB));
+        sc::free(bound, q);
+        bound = b;
+    }
 
     kdTreeNode(const kdTreeNode &a, const kdTreeNode &b, int dimSplit, AABB *bounds, int depth, sc::queue q) :
                                                                                              isLeaf(false),

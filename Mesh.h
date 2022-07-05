@@ -18,6 +18,8 @@ using material::MATERIALS;
 
 inline AABB generateBoundingVolume(std::vector<Triangle> &tVec) {
     sc::float3 min, max;
+    min = tVec[0].v0;
+    max = tVec[0].v0;
     for(Triangle t : tVec){
         sc::float3 a, b, c;
         a = t.v0;
@@ -50,6 +52,15 @@ inline AABB generateBoundingVolume(std::vector<Triangle> &tVec) {
             min.z() = sc::min(min.z(), c.z());
         }
     }
+    if (max.x() - min.x() < EPSILON){
+        max.x() = min.x() + EPSILON;
+    }
+    if (max.y() - min.y() < EPSILON){
+        max.y() = min.y() + EPSILON;
+    }
+    if (max.z() - min.z() < EPSILON){
+        max.z() = min.z() + EPSILON;
+    }
     //Now that we have the two extremes points, we can generate the bounding boxes.
     return AABB(min, max);
 }
@@ -73,7 +84,7 @@ inline void moveResize(std::vector<Triangle> &tVec, AABB &bounds, sc::float3 mov
     bounds.bounds[1] *= resize;
 }
 
-inline std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath){
+inline std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath, bool flat){
     auto triangleVec = std::vector<Triangle>();
     tinyobj::ObjReaderConfig reader_config;
 
@@ -136,10 +147,13 @@ inline std::vector<Triangle> readMesh(AABB &boundingVolume, std::string objPath)
             v++;
 
             bool isFlat=(vectorEquals(Cn, Bn) && vectorEquals(An, Bn)); //right now we don't support smooth normals
-            if(isFlat){
+            if(flat){
                 An = (An+Cn+Bn)/3;
+                triangleVec.emplace_back(Triangle(A,B,C,An,An,An, true));
             }
-            triangleVec.emplace_back(Triangle(A,B,C,An,An,An, true));
+            else{
+                triangleVec.emplace_back(Triangle(A,B,C,An,Bn,Cn, false));
+            }
 
             index_offset += fv;
         }

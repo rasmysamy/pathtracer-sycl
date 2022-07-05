@@ -85,21 +85,21 @@ public:
             }
             if(objType==1 && !pathSeenAlready){
                 AABB bounds = AABB();
-                auto tris = readMesh(bounds, meshPath);
-                sc::float3 shiftVec = position - bounds.getCenter();
-                for (int j = 0; j < tris.size(); ++j) {
-                    tris[j].v0 = (tris[j].v0 * scale) + shiftVec;
-                    tris[j].v1 = (tris[j].v1 * scale) + shiftVec;
-                    tris[j].v2 = (tris[j].v2 * scale) + shiftVec;
-                }
+//                auto tris = readMesh(bounds, meshPath);
+//                sc::float3 shiftVec = position - bounds.getCenter();
+//                for (int j = 0; j < tris.size(); ++j) {
+//                    tris[j].v0 = (tris[j].v0 * scale) + shiftVec;
+//                    tris[j].v1 = (tris[j].v1 * scale) + shiftVec;
+//                    tris[j].v2 = (tris[j].v2 * scale) + shiftVec;
+//                }
                 bounds.bounds[0] *= scale;
                 bounds.bounds[1] *= scale;
-                bounds.bounds[0] += shiftVec;
-                bounds.bounds[1] += shiftVec;
+//                bounds.bounds[0] += shiftVec;
+//                bounds.bounds[1] += shiftVec;
                 //This way the center of the mesh is shifter to the position specified by the user, and it is scaled by the factors needed.
                 materialBase matB = materialBase(attr_1, attr_2, mat);
-                meshes.emplace_back(std::tuple<kdTreeMesh, std::string>(
-                        kdTreeMesh(tris, bounds, 13, 20, q, matB), meshPath));
+//                meshes.emplace_back(std::tuple<kdTreeMesh, std::string>(
+//                        kdTreeMesh(tris, bounds, 13, 20, q, matB), meshPath));
             }//The mesh has been loaded!
             if(objType==0){
                 spheres.emplace_back(Sphere(position, radius, attr_1, mat, attr_2));

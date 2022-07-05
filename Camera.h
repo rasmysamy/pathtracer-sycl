@@ -17,12 +17,12 @@ private:
     sc::float3 horizontalVector;
     float rotation;//Currently disabled
     float horizontalFov;
-    int X;
-    int Y;
+    float X;
+    float Y;
     float virtualRecDistance;
     float virtualRecScale;
 public:
-    Camera(const sc::float3& position, const sc::float3& direction, float hF, float r, int x, int y ):
+    Camera(const sc::float3& position, const sc::float3& direction, float hF, float r, float x, float y ):
         principalRay(Ray(position, sc::normalize(direction))), horizontalFov(sc::radians(hF/2)), rotation(r), X(x), Y(y) {
         virtualRecDistance = 1000;
         virtualRecScale = sc::tan(horizontalFov); // NOLINT(cppcoreguidelines-narrowing-conversions)
@@ -41,7 +41,7 @@ public:
 
     inline std::vector<std::vector<Ray>> getRays() const {
         std::vector<std::vector<Ray>> rays;
-        rays.resize(X, std::vector<Ray>(Y));
+        rays.resize((int)X, std::vector<Ray>((int)Y));
         for (int i = 0; i < X; i++){
             for(int j = 0; j < Y; j++){
                 rays[i][j] = getRay(i,j);

@@ -24,6 +24,10 @@ inline int fastrand(int *g_seed) {
     return (*g_seed>>16)&0x7FFF;
 }
 
+inline float fastfrand(int *g_seed) {
+    return (float)(fastrand(g_seed)%32768) / 32767.0f;
+}
+
 inline sc::float4 BoxMueller(sc::float4 uniformRandomUnit){
     float a = uniformRandomUnit.x();
     float b = uniformRandomUnit.y();
@@ -33,6 +37,16 @@ inline sc::float4 BoxMueller(sc::float4 uniformRandomUnit){
                          sc::sqrt(-2*sc::log(a))*sc::sin(2*PI*b),
                          sc::sqrt(-2*sc::log(c))*sc::cos(2*PI*d),
                          sc::sqrt(-2*sc::log(c))*sc::sin(2*PI*d)});
+}
+
+inline sc::float3 randVec(float t, float a){
+    float theta = t*2*PI;
+    a = a*2 - 1;
+    float b = sc::sqrt(1-a*a);
+    float x = sc::cos(theta)*b;
+    float y = sc::sin(theta)*b;
+    float z = a;
+    return sc::float3({x, y, z});
 }
 
 //inline sc::float3 BoxMueller3(sc::float4 uniformRandomUnit){

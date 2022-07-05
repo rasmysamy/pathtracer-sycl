@@ -10,7 +10,7 @@
 #include "Material.h"
 #include "Random.h"
 
-#define NORMAL_RECTIFICATION_COEFFICIENT 0.00005f
+#define NORMAL_RECTIFICATION_COEFFICIENT 0.000005f
 
 namespace material {
     enum MATERIALS {
@@ -51,8 +51,8 @@ namespace material {
             if(sc::dot(rand, reflect) < 0)
                 rand = -rand;
             sc::float3 scatterDir = reflect + attr_2*rand;
-            if(sc::dot(scatterDir, normal)<0)
-                scatterDir=-scatterDir;
+//            if(sc::dot(scatterDir, normal)<0)
+//                scatterDir=-scatterDir;
             Ray rRay = Ray(hitpoint+(normal*NORMAL_RECTIFICATION_COEFFICIENT), reflect + attr_2*rand, attr_1 * incident.getLuminance());
             return rRay;
         }
@@ -83,7 +83,7 @@ namespace material {
         Ray glass(const Ray& incident, int rand) const{ //This calculates glass media changes, which may reflect the light or let it pass through.
             auto n = normal;
             sc::float3 hitPointRectified = hitpoint + -n*NORMAL_RECTIFICATION_COEFFICIENT;
-            float cosIncidentAngle = sc::clamp(sc::dot(incident.getDirection(), normal), -1.0f, 1.0f);
+            float cosIncidentAngle = sc::clamp(sc::dot(incident.getDirection(), n), -1.0f, 1.0f);
             float incidentRayIndex = 1, mediaIndex = attr_2;
             float iorRatio = incidentRayIndex / mediaIndex;
             if (cosIncidentAngle < 0) {
@@ -102,13 +102,13 @@ namespace material {
             sc::float3 refractDirection = iorRatio * incident.getDirection() + (iorRatio * cosIncidentAngle - sc::sqrt(k)) * n;
             return Ray(hitPointRectified, refractDirection, attr_1*incident.getLuminance() * (1-r));
         }
-        Ray reflect(const Ray& incident, sc::float4 rand, int randNum) const{ //Dispatches the correct function based on ray type.
+        Ray reflect(const Ray& incident, sc::float3 rand, int randNum) const{ //Dispatches the correct function based on ray type.
             if(material==MATERIALS::Glass)
                 return glass(incident, randNum);
-            sc::float3 rand3 = sc::float3(BoxMueller(rand).x(), BoxMueller(rand).y(), BoxMueller(rand).z());
+//            sc::float3 rand3 = sc::float3(BoxMueller(rand).x(), BoxMueller(rand).y(), BoxMueller(rand).z());
             if(material==MATERIALS::Diffuse)
-                return diffuseReflect(incident, rand3);
-            return glossyReflect(incident, rand3);
+                return diffuseReflect(incident, rand);
+            return glossyReflect(incident, rand);
         }
         bool operator==(const intersectReturn& rhs)const{
             return (this->stackPos == rhs.stackPos && this->objType == rhs.objType);

@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
 //    int samples = ui->spp->value();
     int width = 1920;
     int height = 1080;
-    int reflections = 6;
-    int samples = 2000;
+    int reflections = 5;
+    int samples = 2;
 
 
 //    sc::device device{sc::cpu_selector()};
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
     std::random_device rd;
     std::mt19937 eng(rd());
 
-    std::uniform_int_distribution<int> dist;
+    std::uniform_int_distribution<int> dist{};
 
     auto seeds = new int[width * height];
     for (int x = 0; x < width; ++x) {
@@ -100,7 +100,7 @@ int main(int argc, char* argv[]) {
 
     std::cout << q.get_device().get_info<sc::info::device::name>() << std::endl;
     std::vector<sc::event*> events;
-    int step = 5;
+    int step = 2;
 //    for(int i = 0; i < samples; i+=step){
     sc::event tracingEvent = q.submit([&](sc::handler &cgh) {
         trace(cgh, rBuf, oBuf, iBuf, kBuf, sBuf, width, height, reflections, samples, skyColor, step, camera);
